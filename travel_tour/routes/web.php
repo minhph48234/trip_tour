@@ -1,7 +1,213 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\TourController;
+use App\Http\Controllers\Admin\TourGuideController;
+use App\Http\Controllers\Admin\UserController;
 
-Route::get('/', function () {
-    return view('welcome');
+use App\Http\Controllers\Client\HomeController;
+use App\Http\Controllers\Client\BookingController as ClientBookingController;
+use App\Http\Controllers\Admin\TripController;
+use App\Http\Controllers\Admin\BookingController as AdminBookingController;
+use App\Http\Controllers\Admin\GroupController;
+
+use App\Http\Controllers\Guide\GuideController;
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC ROUTES
+|--------------------------------------------------------------------------
+| Các route không cần đăng nhập
+|
+*/
+
+Route::get('/', [HomeController::class,'index'])->name('home');
+
+/*
+|--------------------------------------------------------------------------
+| TOUR CLIENT
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('tours')->name('client.tours.')->group(function () {
+
+    // tìm kiếm
+    Route::get('/search', [HomeController::class,'search'])
+        ->name('search');
+
+    // tour nổi bật
+    Route::get('/featured', [HomeController::class,'featured'])
+        ->name('featured');
+
+    // tour mới
+    Route::get('/latest', [HomeController::class,'latest'])
+        ->name('latest');
+
+    // tour giá rẻ
+    Route::get('/cheap', [HomeController::class,'cheap'])
+        ->name('cheap');
+
+    // tour hot
+    Route::get('/hot', [HomeController::class,'hot'])
+        ->name('hot');
+
+    // chi tiết tour (LUÔN ĐỂ CUỐI)
+    Route::get('/{slug}', [HomeController::class,'show'])
+        ->name('show');
+
+});
+/*
+|--------------------------------------------------------------------------
+| AUTH
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('guest')->group(function () {
+
+    Route::get('/login', [AuthController::class, 'showLogin'])
+        ->name('login');
+
+    Route::post('/login', [AuthController::class, 'login'])
+        ->name('login.post');
+
+    Route::get('/register', [AuthController::class, 'showRegister'])
+        ->name('register');
+
+    Route::post('/register', [AuthController::class, 'register'])
+        ->name('register.post');
+});
+
+
+Route::post('/logout', [AuthController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
+
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth','role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+
+        Route::get('/dashboard', function () {
+            return view('admin.dashboard');
+        })->name('dashboard');
+
+        // CRUD Category
+        Route::resource('categories', CategoryController::class);
+
+        // CRUD Tour
+        Route::resource('tours', TourController::class);
+
+        // CRUD Tour Guide
+        Route::resource('guides', TourGuideController::class);
+
+        // CRUD User
+        Route::resource('users', UserController::class);
+
+        // CRUD Trip (Lịch khởi hành)
+        Route::resource('trips', TripController::class);
+
+         // BOOKING
+        Route::resource('bookings', AdminBookingController::class);
+
+        // đổi trạng thái booking
+        Route::put('/bookings/{id}/status',[AdminBookingController::class,'updateStatus'])
+            ->name('bookings.status');
+
+        // Quan lý đoàn khởi hành
+        Route::resource('groups', GroupController::class);
+
+        // phân công guide
+        Route::put('/groups/{id}/assign-guide',
+            [GroupController::class,'assignGuide'])
+            ->name('groups.assignGuide');
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| GUIDE
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth','role:guide'])
+    ->prefix('guide')
+    ->name('guide.')
+    ->group(function () {
+
+        Route::get('/dashboard', function () {
+            return view('guide.dashboard');
+        })->name('dashboard');
+
+        Route::get('/dashboard', [GuideController::class,'dashboard'])
+            ->name('dashboard');
+
+        Route::get('/groups', [GuideController::class,'groups'])
+            ->name('groups');
+
+        Route::get('/groups/{id}/customers', [GuideController::class,'customers'])
+            ->name('customers');
+
+        Route::get('/groups/{id}/attendance', [GuideController::class,'attendance'])
+            ->name('attendance');
+
+        Route::post('/groups/{id}/attendance', [GuideController::class,'saveAttendance'])
+            ->name('attendance.save');
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| USER
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth','role:user'])
+    ->prefix('user')
+    ->name('user.')
+    ->group(function () {
+
+        Route::get('/dashboard', function () {
+            return view('clients.home');
+        })->name('dashboard');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| BOOKING - USER (PHẢI ĐĂNG NHẬP)
+|--------------------------------------------------------------------------
+*/
+
+
+Route::middleware(['auth','role:user'])
+    ->prefix('booking')
+    ->name('booking.')
+    ->group(function () {
+
+        // form đặt tour
+        Route::get('/create/{trip}', [ClientBookingController::class,'create'])
+            ->name('create');
+
+        // lưu booking
+        Route::post('/store', [ClientBookingController::class,'store'])
+            ->name('store');
+
+        // lịch sử booking
+        Route::get('/history', [ClientBookingController::class,'myBookings'])
+            ->name('history');
+
+        // chi tiết booking
+        Route::get('/detail/{id}', [ClientBookingController::class,'show'])
+            ->name('show');
+
 });
