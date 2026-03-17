@@ -1,5 +1,5 @@
 <?php
 echo "Hello World!";
-echo "Xin chào";
+echo "Chào buổi sáng";
 
 // tets commit
