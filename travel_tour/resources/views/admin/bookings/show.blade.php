@@ -11,7 +11,7 @@
 <p>Khách: {{ $booking->customer_name }}</p>
 <p>SĐT: {{ $booking->customer_phone }}</p>
 <p>Số người: {{ $booking->quantity }}</p>
-<p>Tổng tiền: {{ number_format($booking->total_price) }}</p>
+<p>Tổng tiền: {{ number_format($booking->total_price) }} đ</p>
 
 <h3>Danh sách khách</h3>
 
@@ -28,8 +28,28 @@
 <tr>
 
 <td>{{ $customer->name }}</td>
-<td>{{ $customer->gender }}</td>
-<td>{{ $customer->type }}</td>
+
+<td>
+@php
+$genderText = match($customer->gender){
+    'male' => 'Nam',
+    'female' => 'Nữ',
+    default => $customer->gender
+};
+@endphp
+{{ $genderText }}
+</td>
+
+<td>
+@php
+$typeText = match($customer->type){
+    'adult' => 'Người lớn',
+    'child' => 'Trẻ em',
+    default => $customer->type
+};
+@endphp
+{{ $typeText }}
+</td>
 
 </tr>
 
@@ -46,16 +66,22 @@
 
 <select name="status">
 
-<option value="pending">Chờ Xác Nhận</option>
-<option value="confirmed">Xác nhận</option>
-<option value="cancelled">Huỷ</option>
+<option value="pending" {{ $booking->status=='pending' ? 'selected' : '' }}>
+Chờ xác nhận
+</option>
+
+<option value="confirmed" {{ $booking->status=='confirmed' ? 'selected' : '' }}>
+Đã xác nhận
+</option>
+
+<option value="cancelled" {{ $booking->status=='cancelled' ? 'selected' : '' }}>
+Đã huỷ
+</option>
 
 </select>
 
-<button type="submit">
-
+<button type="submit" class="btn btn-primary">
 Cập nhật
-
 </button>
 
 </form>

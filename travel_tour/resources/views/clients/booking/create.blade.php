@@ -51,7 +51,6 @@ Thông tin tour
 </div>
 
 
-
 {{-- ================= FORM BOOKING ================= --}}
 <div class="md:col-span-2 bg-white shadow-xl rounded-2xl p-8 border">
 
@@ -139,14 +138,37 @@ Tối đa {{ $trip->max_people - $trip->current_people }} khách
 
 
 
-{{-- DANH SÁCH KHÁCH --}}
+{{-- ================= DANH SÁCH KHÁCH ================= --}}
 <div>
 
 <h3 class="text-lg font-bold mt-6 mb-3">
 Danh sách khách đi tour
 </h3>
 
-<div id="customerList" class="space-y-4"></div>
+<div class="overflow-x-auto">
+
+<table class="w-full border border-gray-200 rounded-lg">
+
+<thead class="bg-gray-100">
+
+<tr class="text-left">
+
+<th class="p-2 border w-12">#</th>
+<th class="p-2 border">Họ tên</th>
+<th class="p-2 border">SĐT</th>
+<th class="p-2 border">Giới tính</th>
+<th class="p-2 border">Ngày sinh</th>
+<th class="p-2 border">Loại khách</th>
+
+</tr>
+
+</thead>
+
+<tbody id="customerList"></tbody>
+
+</table>
+
+</div>
 
 </div>
 
@@ -159,7 +181,7 @@ Danh sách khách đi tour
 type="submit"
 class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
 
-Đặt tour
+Thanh Toán
 
 </button>
 
@@ -193,45 +215,59 @@ for(let i = 0; i < quantity; i++){
 
 customerList.innerHTML += `
 
-<div class="border rounded-xl p-4">
+<tr>
 
-<h4 class="font-bold mb-3 text-blue-600">
-Khách ${i+1}
-</h4>
+<td class="border p-2 font-bold text-center">
+${i+1}
+</td>
 
+<td class="border p-2">
 <input type="text"
 required
 name="customers[${i}][name]"
 placeholder="Họ tên"
-class="w-full border rounded-lg px-3 py-2 mb-2">
+class="w-full border rounded px-2 py-1">
+</td>
 
+<td class="border p-2">
 <input type="text"
 required
 name="customers[${i}][phone]"
-placeholder="Số điện thoại"
-class="w-full border rounded-lg px-3 py-2 mb-2">
+placeholder="SĐT"
+class="w-full border rounded px-2 py-1">
+</td>
+
+<td class="border p-2">
 
 <select name="customers[${i}][gender]"
-class="w-full border rounded-lg px-3 py-2 mb-2">
+class="w-full border rounded px-2 py-1">
 
 <option value="male">Nam</option>
 <option value="female">Nữ</option>
 
 </select>
 
+</td>
+
+<td class="border p-2">
 <input type="date"
 name="customers[${i}][birthdate]"
-class="w-full border rounded-lg px-3 py-2 mb-2">
+class="w-full border rounded px-2 py-1">
+</td>
+
+<td class="border p-2">
 
 <select name="customers[${i}][type]"
-class="w-full border rounded-lg px-3 py-2">
+class="w-full border rounded px-2 py-1">
 
 <option value="adult">Người lớn</option>
 <option value="child">Trẻ em</option>
 
 </select>
 
-</div>
+</td>
+
+</tr>
 
 `;
 
@@ -247,4 +283,4 @@ generateCustomers();
 
 </script>
 
-@endsection 
+@endsection

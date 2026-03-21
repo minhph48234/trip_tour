@@ -14,7 +14,7 @@ use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Admin\GroupController;
 
 use App\Http\Controllers\Guide\GuideController;
-
+use App\Http\Controllers\Client\PaymentController;
 /*
 |--------------------------------------------------------------------------
 | PUBLIC ROUTES
@@ -162,6 +162,9 @@ Route::middleware(['auth','role:guide'])
         Route::post('/groups/{id}/attendance', [GuideController::class,'saveAttendance'])
             ->name('attendance.save');
 
+        //  LỊCH SỬ TOUR ĐÃ DẪN
+        Route::get('/history', [GuideController::class,'history'])
+            ->name('history');
 });
 
 
@@ -210,4 +213,33 @@ Route::middleware(['auth','role:user'])
         Route::get('/detail/{id}', [ClientBookingController::class,'show'])
             ->name('show');
 
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| PAYMENT - USER
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth','role:user'])
+    ->prefix('payment')
+    ->name('payment.')
+    ->group(function () {
+
+        // chuyển sang cổng thanh toán VNPAY
+        Route::get('/vnpay/{booking}', [PaymentController::class,'vnpay_payment'])
+            ->name('vnpay');
+
+        // trang return từ VNPAY
+        Route::get('/vnpay-return', [PaymentController::class,'vnpayReturn'])
+            ->name('vnpayReturn');
+
+         //  lịch sử thanh toán
+        Route::get('/history', [PaymentController::class,'history'])
+            ->name('history');
+
+        //  CHI TIẾT THANH TOÁN
+        Route::get('/{id}', [PaymentController::class,'show'])
+            ->name('show');
 });

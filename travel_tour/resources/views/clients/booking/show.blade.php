@@ -24,6 +24,33 @@ if ($tour->thumbnail ?? null) {
 if (!$displayUrl) {
     $displayUrl = 'https://images.unsplash.com/photo-1503220317375-aaad61436b1b?q=80&w=1200';
 }
+
+/* ======================
+   TRẠNG THÁI BOOKING
+====================== */
+
+switch ($booking->status) {
+
+    case 'pending':
+        $statusText = 'Chờ thanh toán';
+        $statusColor = 'bg-yellow-100 text-yellow-700';
+        break;
+
+    case 'confirmed':
+        $statusText = 'Đã thanh toán';
+        $statusColor = 'bg-green-100 text-green-700';
+        break;
+
+    case 'canceled':
+        $statusText = 'Đã hủy';
+        $statusColor = 'bg-red-100 text-red-700';
+        break;
+
+    default:
+        $statusText = $booking->status;
+        $statusColor = 'bg-gray-100 text-gray-700';
+}
+
 @endphp
 
 @section('title', $tour->name)
@@ -39,7 +66,6 @@ class="w-full h-[420px] object-cover rounded-2xl shadow-lg"
 alt="{{ $tour->name }}">
 </div>
 
-
 {{-- TÊN TOUR + GIÁ --}}
 <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-8">
 
@@ -53,13 +79,12 @@ alt="{{ $tour->name }}">
 
 </div>
 
-
 {{-- THÔNG TIN BOOKING --}}
 <div class="bg-white shadow-lg rounded-2xl p-6 mb-10">
 
 <h2 class="text-xl font-bold mb-4">Thông tin đặt tour</h2>
 
-<p><b>Mã booking:</b> {{ $booking->id }}</p>
+<p><b>Mã booking:</b> {{ $booking->booking_code }}</p>
 
 <p><b>Ngày khởi hành:</b>
 {{ \Carbon\Carbon::parse($booking->trip->start_date)->format('d/m/Y') }}
@@ -76,11 +101,12 @@ alt="{{ $tour->name }}">
 </p>
 
 <p><b>Trạng thái:</b>
-<span class="font-semibold">{{ $booking->status }}</span>
+<span class="px-3 py-1 rounded-lg font-semibold {{ $statusColor }}">
+{{ $statusText }}
+</span>
 </p>
 
 </div>
-
 
 {{-- DANH SÁCH KHÁCH --}}
 <div class="mb-12">
@@ -120,7 +146,17 @@ alt="{{ $tour->name }}">
 </td>
 
 <td class="p-3 border">
-{{ $customer->type ?? 'Người lớn' }}
+
+@php
+$typeText = match($customer->type){
+    'adult' => 'Người lớn',
+    'child' => 'Trẻ em',
+    default => 'Người lớn'
+};
+@endphp
+
+{{ $typeText }}
+
 </td>
 
 </tr>
@@ -141,7 +177,6 @@ alt="{{ $tour->name }}">
 
 </div>
 
-
 {{-- MÔ TẢ TOUR --}}
 <div class="mb-14">
 
@@ -154,7 +189,6 @@ Mô tả tour
 </div>
 
 </div>
-
 
 {{-- ALBUM ẢNH --}}
 @if($tour->images && $tour->images->count())
@@ -180,7 +214,6 @@ class="h-40 w-full object-cover rounded-xl shadow hover:scale-105 transition">
 </div>
 
 @endif
-
 
 {{-- NÚT QUAY LẠI --}}
 <div class="text-center mt-10">
