@@ -170,8 +170,7 @@ class BookingController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('booking.history')
-                ->with('success', 'Đặt tour thành công!');
+                ->route('payment.vnpay',$booking->id);
         } catch (\Exception $e) {
 
             DB::rollBack();

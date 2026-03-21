@@ -16,19 +16,25 @@ class BookingController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function index()
+    public function index(Request $request)
     {
 
-        $bookings = Booking::with([
-            'tour',
-            'trip',
-            'group',
-            'user'
-        ])
-        ->latest()
-        ->paginate(10);
+        $keyword = $request->keyword;
 
-        return view('admin.bookings.index',compact('bookings'));
+        $bookings = Booking::with([
+                'tour',
+                'trip',
+                'group',
+                'user'
+            ])
+            ->when($keyword, function ($query) use ($keyword) {
+                $query->where('customer_name', 'like', "%$keyword%")
+                      ->orWhere('booking_code', 'like', "%$keyword%");
+            })
+            ->latest()
+            ->paginate(10);
+
+        return view('admin.bookings.index', compact('bookings'));
 
     }
 
