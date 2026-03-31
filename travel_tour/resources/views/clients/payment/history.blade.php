@@ -22,6 +22,7 @@ Lịch sử thanh toán
 <th class="p-3 border">Mã booking</th>
 <th class="p-3 border">Số tiền</th>
 <th class="p-3 border">Phương thức</th>
+<th class="p-3 border">Loaị thanh toán</th>
 <th class="p-3 border">Trạng thái</th>
 <th class="p-3 border">Ngày thanh toán</th>
 <th class="p-3 border">Chi tiết</th>
@@ -38,13 +39,28 @@ Lịch sử thanh toán
 <td class="p-3 border">
 {{ $payment->booking->booking_code }}
 </td>
-
+ 
 <td class="p-3 border text-red-600 font-bold">
 {{ number_format($payment->amount) }} VNĐ
 </td>
 
 <td class="p-3 border">
 {{ strtoupper($payment->method) }}
+</td>
+
+<td class="p-3 border">
+
+@php
+$typeText = match($payment->type){
+    'deposit' => 'Thanh toán cọc',
+    'final' => 'Thanh toán đầy đủ',
+    'extra' => 'Thanh toán bổ sung',
+    default => $payment->type
+};
+@endphp
+
+{{ $typeText }}
+
 </td>
 
 <td class="p-3 border">
@@ -78,7 +94,7 @@ $statusColor = match($payment->status){
 <a href="{{ route('payment.show', $payment->id) }}"
 class="text-blue-600 hover:underline">
 
-Xem booking
+Xem hoá đơn
 
 </a>
 

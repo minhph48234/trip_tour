@@ -82,6 +82,30 @@
                 </div>
 
                 <div class="flex justify-between">
+                    <span class="text-gray-600">Loại thanh toán</span>
+
+                    @php
+                        $typeText = match($payment->type){
+                            'deposit' => 'Thanh toán cọc',
+                            'final' => 'Thanh toán đầy đủ',
+                            'extra' => 'Thanh toán bổ sung',
+                            default => $payment->type
+                        };
+
+                        $typeColor = match($payment->type){
+                            'deposit' => 'bg-yellow-100 text-yellow-700',
+                            'final' => 'bg-green-100 text-green-700',
+                            'extra' => 'bg-blue-100 text-blue-700',
+                            default => 'bg-gray-100 text-gray-700'
+                        };
+                    @endphp
+
+                    <span class="px-3 py-1 rounded-lg font-semibold {{ $typeColor }}">
+                        {{ $typeText }}
+                    </span>
+                </div>
+
+                <div class="flex justify-between">
                     <span class="text-gray-600">Thời gian thanh toán</span>
                     <span>
                         {{ $payment->paid_at ? $payment->paid_at->format('d/m/Y H:i') : '-' }}
