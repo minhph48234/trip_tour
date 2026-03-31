@@ -140,6 +140,74 @@ class HomeController extends Controller
             'tours' => $tours
         ]);
     }
+    //trang dịch vụ
+    public function service(){
+        $categories = TourCategory::all();
+        // tour mới nhất
+        $latestTours = Tour::with(['category','images'])
+            ->latest()
+            ->take(6)
+            ->get();
+
+        // tour nổi bật (booking nhiều nhất)
+        $featuredTours = Tour::with(['category','images'])
+            ->withCount('bookings')
+            ->orderBy('bookings_count','desc')
+            ->take(6)
+            ->get();
+
+        // tour giá thấp
+        $cheapTours = Tour::with(['category','images'])
+            ->orderBy('price','asc')
+            ->take(6)
+            ->get();
+
+        // tour hot (xem nhiều)
+        $hotTours = Tour::with(['category','images'])
+            ->orderBy('views','desc')
+            ->take(6)
+            ->get();
+        return view('clients.service',compact(
+            'latestTours',
+            'featuredTours',
+            'cheapTours',
+            'hotTours',
+            'categories'));
+    }
+    // trang liên hệ
+    public function contact(){
+        $categories = TourCategory::all();
+        // tour mới nhất
+        $latestTours = Tour::with(['category','images'])
+            ->latest()
+            ->take(6)
+            ->get();
+
+        // tour nổi bật (booking nhiều nhất)
+        $featuredTours = Tour::with(['category','images'])
+            ->withCount('bookings')
+            ->orderBy('bookings_count','desc')
+            ->take(6)
+            ->get();
+
+        // tour giá thấp
+        $cheapTours = Tour::with(['category','images'])
+            ->orderBy('price','asc')
+            ->take(6)
+            ->get();
+
+        // tour hot (xem nhiều)
+        $hotTours = Tour::with(['category','images'])
+            ->orderBy('views','desc')
+            ->take(6)
+            ->get();
+        return view('clients.contact',compact(
+            'latestTours',
+            'featuredTours',
+            'cheapTours',
+            'hotTours',
+            'categories'));
+    }
 // tìm kiếm tour
    public function search(Request $request)
 {

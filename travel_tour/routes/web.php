@@ -24,6 +24,8 @@ use App\Http\Controllers\Client\PaymentController;
 */
 
 Route::get('/', [HomeController::class,'index'])->name('home');
+Route::get('services', [HomeController::class,'service'])->name('service');
+Route::get('contact', [HomeController::class,'contact'])->name('contact');
 
 /*
 |--------------------------------------------------------------------------
