@@ -8,7 +8,6 @@
 
 <h2 class="page-title">Danh sách Booking</h2>
 
-
 {{-- ================= SEARCH ================= --}}
 <div style="margin-bottom:20px;">
 
@@ -37,7 +36,6 @@ Reset
 
 </div>
 
-
 {{-- ================= TABLE ================= --}}
 <table class="table table-bordered">
 
@@ -51,6 +49,10 @@ Reset
 <th>Khách</th>
 <th>Số người</th>
 <th>Tổng tiền</th>
+
+<th>Tiền cọc</th> {{-- ✅ thêm --}}
+<th>Đã thanh toán</th> {{-- ✅ thêm --}}
+
 <th>Trạng thái</th>
 <th>Action</th>
 
@@ -76,19 +78,37 @@ Reset
 
 <td>{{ number_format($booking->total_price) }} đ</td>
 
+<td class="text-primary font-weight-bold">
+{{ number_format($booking->deposit_amount ?? ($booking->total_price * 0.5)) }} đ
+</td>
+
+<td class="text-success font-weight-bold">
+{{ number_format($booking->paid_amount ?? 0) }} đ
+</td>
+
 <td>
 
 @php
 $statusText = match($booking->status){
-    'pending' => 'Chờ xử lý',
-    'paid' => 'Đã thanh toán',
-    'cancelled' => 'Đã hủy',
+    'pending' => 'Chờ thanh toán',
+    'deposit_paid' => 'Đã đặt cọc',
+    'paid' => 'Đã thanh toán đủ',
     'completed' => 'Hoàn thành',
-    default => $booking->status
+    'canceled' => 'Đã hủy',
+    default => 'Không xác định'
+};
+
+$statusClass = match($booking->status){
+    'pending' => 'badge bg-warning',
+    'deposit_paid' => 'badge bg-info',
+    'paid' => 'badge bg-success',
+    'completed' => 'badge bg-primary',
+    'canceled' => 'badge bg-danger',
+    default => 'badge bg-secondary'
 };
 @endphp
 
-<span class="status {{ $booking->status }}">
+<span class="{{ $statusClass }}">
 {{ $statusText }}
 </span>
 
@@ -108,7 +128,7 @@ Chi tiết
 @empty
 
 <tr>
-<td colspan="8" style="text-align:center">
+<td colspan="10" style="text-align:center">
 Không có dữ liệu
 </td>
 </tr>
@@ -118,7 +138,6 @@ Không có dữ liệu
 </tbody>
 
 </table>
-
 
 {{-- ================= PAGINATION ================= --}}
 <div class="pagination-wrapper">

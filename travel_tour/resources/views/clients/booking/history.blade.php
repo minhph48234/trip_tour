@@ -17,66 +17,87 @@ use Illuminate\Support\Str;
 
         @php
 
-        $tour = $booking->tour ?? null;
+        // =====================
+        // TOUR
+        // =====================
+        $tour = $booking->trip->tour ?? null;
 
-        /*
-        =====================
-        XỬ LÝ ẢNH
-        =====================
-        */
-
+        // =====================
+        // ẢNH
+        // =====================
         $displayUrl = null;
 
         if($tour && $tour->thumbnail){
-
             if(Str::startsWith($tour->thumbnail,['http://','https://'])){
                 $displayUrl = $tour->thumbnail;
             }
-
             elseif(file_exists(public_path('storage/'.$tour->thumbnail))){
                 $displayUrl = asset('storage/'.$tour->thumbnail);
             }
-
             elseif(file_exists(public_path($tour->thumbnail))){
                 $displayUrl = asset($tour->thumbnail);
             }
-
         }
 
         if(!$displayUrl){
             $displayUrl = 'https://images.unsplash.com/photo-1503220317375-aaad61436b1b?q=80&w=800';
         }
 
-        /*
-        =====================
-        TRẠNG THÁI BOOKING
-        =====================
-        */
+        // =====================
+        // TIỀN
+        // =====================
+        $totalPaid = $booking->payments->where('status','paid')->sum('amount');
+        $remaining = $booking->total_price - $totalPaid;
 
-        $statusText='';
-        $statusClass='';
-
+        // =====================
+        // TRẠNG THÁI (CHUẨN)
+        // =====================
         switch($booking->status){
 
             case 'pending':
-                $statusText='Chờ xác nhận';
-                $statusClass='bg-orange-100 text-orange-600';
+                $statusText = 'Chờ thanh toán';
+                $statusClass = 'bg-yellow-100 text-yellow-700';
                 break;
 
-            case 'confirmed':
-                $statusText='Đã xác nhận';
-                $statusClass='bg-green-100 text-green-600';
+            case 'deposit_paid':
+                $statusText = 'Đã đặt cọc';
+                $statusClass = 'bg-blue-100 text-blue-700';
+                break;
+
+            case 'paid':
+                $statusText = 'Đã thanh toán đủ';
+                $statusClass = 'bg-green-100 text-green-700';
+                break;
+
+            case 'completed':
+                $statusText = 'Hoàn thành';
+                $statusClass = 'bg-green-200 text-green-800';
                 break;
 
             case 'canceled':
-                $statusText='Đã hủy';
-                $statusClass='bg-red-100 text-red-600';
+                $statusText = 'Đã hủy';
+                $statusClass = 'bg-red-100 text-red-700';
                 break;
 
             default:
-                $statusText='Không xác định';
-                $statusClass='bg-gray-100 text-gray-600';
 
+                // fallback theo tiền nếu DB sai
+                if($totalPaid <= 0){
+                    $statusText = 'Chờ thanh toán';
+                    $statusClass = 'bg-yellow-100 text-yellow-700';
+                }
+                elseif($totalPaid < $booking->deposit_amount){
+                    $statusText = 'Chưa đủ tiền cọc';
+                    $statusClass = 'bg-orange-100 text-orange-700';
+                }
+                elseif($totalPaid < $booking->total_price){
+                    $statusText = 'Đã đặt cọc';
+                    $statusClass = 'bg-blue-100 text-blue-700';
+                }
+                else{
+                    $statusText = 'Đã thanh toán đủ';
+                    $statusClass = 'bg-green-100 text-green-700';
+                }
         }
 
         @endphp
@@ -84,16 +105,12 @@ use Illuminate\Support\Str;
 
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row gap-6 hover:shadow-md transition">
 
-
-            {{-- ẢNH TOUR --}}
+            {{-- ẢNH --}}
             <div class="md:w-1/4">
-
                 <img src="{{ $displayUrl }}"
                      onerror="this.src='https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=800'"
                      class="w-full h-32 md:h-40 object-cover rounded-2xl shadow-sm">
-
             </div>
-
 
             {{-- THÔNG TIN --}}
             <div class="flex-1">
@@ -110,45 +127,76 @@ use Illuminate\Support\Str;
 
                 </div>
 
-
                 <div class="text-slate-500 text-sm space-y-2">
 
-                    <p class="flex items-center">
-                        <i class="fas fa-calendar-alt w-5 text-blue-500"></i>
+                    <p>
                         Ngày đặt:
                         {{ optional($booking->created_at)->format('d/m/Y') }}
                     </p>
 
-                    <p class="flex items-center">
-                        <i class="fas fa-users w-5 text-blue-500"></i>
+                    <p>
                         Số lượng:
                         {{ $booking->quantity }} khách
                     </p>
 
-                    <p class="text-lg font-black text-blue-600 pt-2 border-t border-slate-50">
+                </div>
+
+                {{-- TIỀN --}}
+                <div class="pt-3 border-t border-slate-100 mt-3 space-y-1">
+
+                    <p>
                         Tổng tiền:
-                        {{ number_format($booking->total_price ?? 0,0,',','.') }}đ
+                        <span class="font-bold text-red-600">
+                            {{ number_format($booking->total_price) }}đ
+                        </span>
+                    </p>
+
+                    <p>
+                        Đã thanh toán:
+                        <span class="font-bold text-green-600">
+                            {{ number_format($totalPaid) }}đ
+                        </span>
+                    </p>
+
+                    <p>
+                        Còn lại:
+                        <span class="font-bold text-orange-600">
+                            {{ number_format($remaining) }}đ
+                        </span>
                     </p>
 
                 </div>
 
-
-                {{-- NÚT XEM CHI TIẾT --}}
-                <div class="mt-4">
+                {{-- NÚT --}}
+                <div class="mt-4 flex gap-2 flex-wrap">
 
                     <a href="{{ route('booking.show',$booking->id) }}"
                        class="inline-block bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
-
                         Xem chi tiết
-
                     </a>
+
+                    {{-- NÚT THANH TOÁN TIẾP --}}
+                    @if($booking->status !== 'paid' && $booking->status !== 'completed' && $booking->status !== 'canceled')
+
+                        @if($totalPaid < $booking->deposit_amount)
+                            <a href="{{ route('payment.vnpay',$booking->id) }}"
+                               class="bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-yellow-600">
+                                Thanh toán cọc
+                            </a>
+                        @elseif($totalPaid < $booking->total_price)
+                            <a href="{{ route('payment.vnpayFinal',$booking->id) }}"
+                               class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700">
+                                Thanh toán còn lại
+                            </a>
+                        @endif
+
+                    @endif
 
                 </div>
 
             </div>
 
         </div>
-
 
         @empty
 
@@ -163,9 +211,7 @@ use Illuminate\Support\Str;
 
             <a href="{{ url('/') }}"
                class="inline-block mt-4 text-blue-600 font-bold hover:underline">
-
                 Khám phá tour ngay
-
             </a>
 
         </div>
@@ -174,12 +220,9 @@ use Illuminate\Support\Str;
 
     </div>
 
-
     {{-- PAGINATION --}}
     <div class="mt-10">
-
         {{ $bookings->links() }}
-
     </div>
 
 </div>
