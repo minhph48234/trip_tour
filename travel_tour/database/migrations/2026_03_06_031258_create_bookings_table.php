@@ -40,7 +40,16 @@ return new class extends Migration
 
             $table->text('note')->nullable();
 
-            $table->enum('status',['pending','confirmed','canceled'])->default('pending');
+            $table->decimal('deposit_amount',12,2)->default(0); // số tiền cần cọc
+            $table->decimal('paid_amount',12,2)->default(0);    // đã trả
+
+            $table->enum('status', [
+                'pending',        // vừa đặt
+                'deposit_paid',   // đã cọc
+                'paid',           // đã thanh toán full
+                'completed',      // đi xong
+                'canceled'
+            ])->default('pending');                                                     
 
             $table->timestamps();
         });
