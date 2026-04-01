@@ -22,8 +22,17 @@
     <div class="mb-3">
         <label class="form-label">Trạng thái</label>
         <select name="status" class="form-select">
-            <option value="1" @selected($category->status == 1)>Hiển thị</option>
-            <option value="0" @selected($category->status == 0)>Ẩn</option>
+            <option value="active" @selected($category->status == 'active')>Hiển thị</option>
+            <option value="inactive" @selected($category->status == 'inactive')>Ẩn</option>
+        </select>
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label">Danh mục cha</label>
+        <select name="parent_id" class="form-select">
+            @foreach($listCategory as $cat)
+            <option value="{{ $cat->id }}" @selected($cat->id == $category->parent_id)> {{ $cat->name }}</option>
+            @endforeach
         </select>
     </div>
 

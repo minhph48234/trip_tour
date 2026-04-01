@@ -20,8 +20,10 @@ class CategoryController extends Controller
 
     // Form thêm
     public function create()
+
     {
-        return view('admin.categories.create');
+        $categories = TourCategory::All();
+        return view('admin.categories.create', compact('categories'));
     }
 
     // Lưu dữ liệu
@@ -47,27 +49,35 @@ class CategoryController extends Controller
     public function edit($id)
     {
         $category = TourCategory::findOrFail($id);
-
-        return view('admin.categories.edit', compact('category'));
+        $listCategory = TourCategory::All();
+        return view('admin.categories.edit', compact('category' ,'listCategory'));
     }
 
     // Cập nhật
-    public function update(Request $request,$id)
+    public function update(Request $request, $id)
     {
         $category = TourCategory::findOrFail($id);
-
+    
         $request->validate([
-            'name' => 'required|max:255'
+            'name' => 'required|max:255',
+            'status' => 'required|in:active,inactive',
+            'parent_id' => 'nullable|exists:tour_categories,id'
         ]);
-
+    
+        // ❗ tránh chọn chính nó làm cha
+        if ($request->parent_id == $id) {
+            return back()->with('error', 'Không thể chọn chính nó làm danh mục cha');
+        }
+    
         $category->update([
-            'name' => $request->name
+            'name' => $request->name,
+            'status' => $request->status,
+            'parent_id' => $request->parent_id
         ]);
-
+    
         return redirect()->route('admin.categories.index')
-            ->with('success','Cập nhật thành công');
+            ->with('success', 'Cập nhật thành công');
     }
-
     // Xoá
     public function destroy($id)
     {
