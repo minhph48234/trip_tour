@@ -115,4 +115,20 @@ class HomeController extends Controller
 
         return view('clients.search', compact('tours', 'categories'));
     }
+    // trang contact
+    public function contact()
+    {
+        $categories = TourCategory::all();
+
+        // 👉 LẤY TẤT CẢ TOUR - SẮP XẾP THEO BOOKING
+        $featuredTours = Tour::with(['category', 'images', 'trips'])
+            ->withCount('bookings')
+            ->orderBy('bookings_count', 'desc')
+            ->paginate(9); // có phân trang
+
+        return view('clients.contact', compact(
+            'featuredTours',
+            'categories'
+        ));
+    }
 }
