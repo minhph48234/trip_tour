@@ -6,16 +6,58 @@ use App\Http\Controllers\Controller;
 use App\Models\Trip;
 use App\Models\Tour;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class TripController extends Controller
 {
 
-    public function index()
-    {
-        $trips = Trip::with('tour')->latest()->paginate(10);
+    public function index(Request $request)
+{
+    $query = Trip::with('tour');
 
-        return view('admin.trips.index', compact('trips'));
+    // ================= FILTER =================
+    if ($request->filled('start_date')) {
+        $query->whereDate('start_date', '>=', $request->start_date);
     }
+
+    if ($request->filled('end_date')) {
+        $query->whereDate('end_date', '<=', $request->end_date);
+    }
+
+    $trips = $query->get();
+
+    // ================= AUTO UPDATE STATUS =================
+    foreach ($trips as $trip) {
+
+        $today = Carbon::today();
+
+        if ($today > Carbon::parse($trip->end_date)) {
+            $trip->status = 'finished';
+        }
+
+        elseif (
+            $today >= Carbon::parse($trip->start_date) &&
+            $today <= Carbon::parse($trip->end_date)
+        ) {
+            $trip->status = 'started';
+        }
+
+        else {
+            if ($trip->current_people >= $trip->max_people) {
+                $trip->status = 'full';
+            } else {
+                $trip->status = 'open';
+            }
+        }
+
+        $trip->save();
+    }
+
+    // load lại có paginate
+    $trips = $query->latest()->paginate(10);
+
+    return view('admin.trips.index', compact('trips'));
+}
 
 
     public function create()
@@ -46,7 +88,7 @@ class TripController extends Controller
         ]);
 
         return redirect()->route('admin.trips.index')
-            ->with('success', 'Tạo lịch khởi hành thành công');
+            ->with('success','Tạo lịch khởi hành thành công');
     }
 
 
@@ -63,7 +105,7 @@ class TripController extends Controller
         $trip = Trip::findOrFail($id);
         $tours = Tour::all();
 
-        return view('admin.trips.edit', compact('trip', 'tours'));
+        return view('admin.trips.edit', compact('trip','tours'));
     }
 
 
@@ -82,7 +124,7 @@ class TripController extends Controller
         $trip->update($request->all());
 
         return redirect()->route('admin.trips.index')
-            ->with('success', 'Cập nhật thành công');
+            ->with('success','Cập nhật thành công');
     }
 
 
@@ -92,6 +134,6 @@ class TripController extends Controller
         $trip->delete();
 
         return redirect()->route('admin.trips.index')
-            ->with('success', 'Xóa lịch khởi hành thành công !');
+            ->with('success','Xóa lịch khởi hành thành công');
     }
 }
