@@ -25,7 +25,12 @@ use App\Http\Controllers\Admin\DashboardController;
 */
 
 Route::get('/', [HomeController::class,'index'])->name('home');
+
+// thanh nav trên trang chủ
 Route::get('contact', [HomeController::class,'contact'])->name('contact');
+Route::get('about', [HomeController::class,'about'])->name('about');
+Route::get('services', [HomeController::class,'service'])->name('service');
+Route::get('destinations', [HomeController::class,'destinations'])->name('destinations');
 
 
 /*

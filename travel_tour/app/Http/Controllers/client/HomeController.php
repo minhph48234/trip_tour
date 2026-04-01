@@ -131,4 +131,52 @@ class HomeController extends Controller
             'categories'
         ));
     }
+    // trang about
+    public function about()
+    {
+        $categories = TourCategory::all();
+
+        // 👉 LẤY TẤT CẢ TOUR - SẮP XẾP THEO BOOKING
+        $featuredTours = Tour::with(['category', 'images', 'trips'])
+            ->withCount('bookings')
+            ->orderBy('bookings_count', 'desc')
+            ->paginate(9); // có phân trang
+
+        return view('clients.about', compact(
+            'featuredTours',
+            'categories'
+        ));
+    }
+    // trang service
+    public function service()
+    {
+        $categories = TourCategory::all();
+
+        // 👉 LẤY TẤT CẢ TOUR - SẮP XẾP THEO BOOKING
+        $featuredTours = Tour::with(['category', 'images', 'trips'])
+            ->withCount('bookings')
+            ->orderBy('bookings_count', 'desc')
+            ->paginate(9); // có phân trang
+
+        return view('clients.service', compact(
+            'featuredTours',
+            'categories'
+        ));
+    }
+    //trang destinations
+    public function destinations()
+    {
+        $categories = TourCategory::all();
+
+        // 👉 LẤY TẤT CẢ TOUR - SẮP XẾP THEO BOOKING
+        $featuredTours = Tour::with(['category', 'images', 'trips'])
+            ->withCount('bookings')
+            ->orderBy('bookings_count', 'desc')
+            ->paginate(9); // có phân trang
+
+        return view('clients.destinations', compact(
+            'featuredTours',
+            'categories'
+        ));
+    }
 }
