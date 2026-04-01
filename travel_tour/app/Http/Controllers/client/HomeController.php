@@ -167,7 +167,22 @@ class HomeController extends Controller
     public function destinations()
     {
         $categories = TourCategory::all();
-
+        // lấy tour mới nhất
+        $latestTours = Tour::with(['category', 'images'])
+            ->orderBy('created_at', 'desc')
+            ->take(6)
+            ->get();
+        // tour giá rẻ
+        $cheapTours = Tour::with(['category', 'images'])
+            ->orderBy('price', 'asc')
+            ->take(6)
+            ->get();
+        // tour nổi bật
+        $hotTours = Tour::with(['category','images'])
+    ->withCount('bookings')
+    ->orderBy('bookings_count', 'desc')
+    ->take(6)
+    ->get();
         // 👉 LẤY TẤT CẢ TOUR - SẮP XẾP THEO BOOKING
         $featuredTours = Tour::with(['category', 'images', 'trips'])
             ->withCount('bookings')
@@ -176,7 +191,10 @@ class HomeController extends Controller
 
         return view('clients.destinations', compact(
             'featuredTours',
-            'categories'
+            'categories',
+            'latestTours',
+            'cheapTours',
+            'hotTours'
         ));
     }
 }
