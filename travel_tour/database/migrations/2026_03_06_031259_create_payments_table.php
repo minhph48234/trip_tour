@@ -15,10 +15,21 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->enum('method',['cash','vnpay','momo']);
-
+ 
             $table->decimal('amount',12,2);
 
+             // mã đơn hàng gửi sang VNPay
+            $table->string('vnp_txn_ref')
+                ->nullable();
+
+            // mã phản hồi từ VNPay
+            $table->string('vnp_response_code')
+                ->nullable();
+                
             $table->enum('status',['pending','paid','failed','refunded'])->default('pending');
+            
+            // payment này là cọc hay thanh toán hết
+            $table->enum('type', ['deposit','final','extra']);
 
             $table->string('transaction_code')->nullable();
 

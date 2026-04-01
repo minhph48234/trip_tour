@@ -43,7 +43,7 @@
 
 <td>
 
-<a href="{{ route('admin.groups.show',$group->id) }}">
+<a class="btn btn-primary" href="{{ route('admin.groups.show',$group->id) }}">
 Chi tiết
 </a>
 

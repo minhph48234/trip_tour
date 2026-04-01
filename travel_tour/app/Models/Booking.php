@@ -46,8 +46,25 @@ class Booking extends Model
         return $this->hasMany(BookingCustomer::class);
     }
 
-    public function payment()
+    public function payments()
     {
-        return $this->hasOne(Payment::class);
+        return $this->hasMany(\App\Models\Payment::class);
+    }
+
+    public function updateStatus()
+    {
+        $paid = $this->paid_amount ?? 0;
+        $deposit = $this->deposit_amount ?? 0;
+        $total = $this->total_price ?? 0;
+
+        if ($paid >= $total) {
+            $this->status = 'paid';
+        } elseif ($paid > $deposit) {
+            $this->status = 'deposit_paid';
+        } else {
+            $this->status = 'pending';
+        }
+
+        $this->save();
     }
 }

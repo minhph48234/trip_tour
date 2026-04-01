@@ -46,7 +46,7 @@ class TripController extends Controller
         ]);
 
         return redirect()->route('admin.trips.index')
-            ->with('success','Tạo lịch khởi hành thành công');
+            ->with('success', 'Tạo lịch khởi hành thành công');
     }
 
 
@@ -63,7 +63,7 @@ class TripController extends Controller
         $trip = Trip::findOrFail($id);
         $tours = Tour::all();
 
-        return view('admin.trips.edit', compact('trip','tours'));
+        return view('admin.trips.edit', compact('trip', 'tours'));
     }
 
 
@@ -82,7 +82,7 @@ class TripController extends Controller
         $trip->update($request->all());
 
         return redirect()->route('admin.trips.index')
-            ->with('success','Cập nhật thành công');
+            ->with('success', 'Cập nhật thành công');
     }
 
 
@@ -92,6 +92,6 @@ class TripController extends Controller
         $trip->delete();
 
         return redirect()->route('admin.trips.index')
-            ->with('success','Xóa lịch khởi hành thành công');
+            ->with('success', 'Xóa lịch khởi hành thành công !');
     }
 }

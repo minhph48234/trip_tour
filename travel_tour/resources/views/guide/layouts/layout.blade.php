@@ -35,6 +35,12 @@ Tour của tôi
 </a>
 </li>
 
+<li class="nav-item">
+<a class="nav-link" href="">
+Lịch sử tour đã dẫn
+</a>
+</li>
+
 </ul>
 
 <form action="{{ route('logout') }}" method="POST">

@@ -121,4 +121,16 @@ return redirect()
 
 }
 
+// lịch sử tour đã dẫn
+public function history()
+{
+    $groups = \App\Models\Group::with(['trip.tour'])
+        ->where('guide_id', auth()->id())
+        ->where('status', 'completed') // hoặc done
+        ->orderBy('id','desc')
+        ->get();
+
+    return view('guide.history', compact('groups'));
+}
+
 }

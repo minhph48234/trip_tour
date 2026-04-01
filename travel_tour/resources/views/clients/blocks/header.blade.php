@@ -58,6 +58,11 @@
                         Lịch sử đặt tour
                     </a>
 
+                    <a href="{{ route('payment.history') }}"
+                        class="block px-4 py-3 hover:bg-gray-100">
+                        Lịch sử thanh toán
+                    </a>
+
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button

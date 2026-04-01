@@ -107,7 +107,7 @@
 
         <form method="POST" action="/logout">
         @csrf
-        <button>Logout</button>
+        <button class="btn btn-danger">Logout</button>
         </form>
         <style>
     .nav-link-admin {
