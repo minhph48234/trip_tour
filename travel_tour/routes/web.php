@@ -25,6 +25,8 @@ use App\Http\Controllers\Admin\DashboardController;
 */
 
 Route::get('/', [HomeController::class,'index'])->name('home');
+Route::get('contact', [HomeController::class,'contact'])->name('contact');
+
 
 /*
 |--------------------------------------------------------------------------

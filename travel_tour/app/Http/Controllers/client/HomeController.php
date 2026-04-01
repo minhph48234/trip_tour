@@ -174,40 +174,6 @@ class HomeController extends Controller
             'hotTours',
             'categories'));
     }
-    // trang liên hệ
-    public function contact(){
-        $categories = TourCategory::all();
-        // tour mới nhất
-        $latestTours = Tour::with(['category','images'])
-            ->latest()
-            ->take(6)
-            ->get();
-
-        // tour nổi bật (booking nhiều nhất)
-        $featuredTours = Tour::with(['category','images'])
-            ->withCount('bookings')
-            ->orderBy('bookings_count','desc')
-            ->take(6)
-            ->get();
-
-        // tour giá thấp
-        $cheapTours = Tour::with(['category','images'])
-            ->orderBy('price','asc')
-            ->take(6)
-            ->get();
-
-        // tour hot (xem nhiều)
-        $hotTours = Tour::with(['category','images'])
-            ->orderBy('views','desc')
-            ->take(6)
-            ->get();
-        return view('clients.contact',compact(
-            'latestTours',
-            'featuredTours',
-            'cheapTours',
-            'hotTours',
-            'categories'));
-    }
     //trang about
     public function about(){
         $categories = TourCategory::all();
@@ -270,6 +236,40 @@ class HomeController extends Controller
             ->take(6)
             ->get();
         return view('clients.destinations',compact(
+            'latestTours',
+            'featuredTours',
+            'cheapTours',
+            'hotTours',
+            'categories'));
+    }
+    // trang liên hệ
+    public function contact(){
+        $categories = TourCategory::all();
+        // tour mới nhất
+        $latestTours = Tour::with(['category','images'])
+            ->latest()
+            ->take(6)
+            ->get();
+
+        // tour nổi bật (booking nhiều nhất)
+        $featuredTours = Tour::with(['category','images'])
+            ->withCount('bookings')
+            ->orderBy('bookings_count','desc')
+            ->take(6)
+            ->get();
+
+        // tour giá thấp
+        $cheapTours = Tour::with(['category','images'])
+            ->orderBy('price','asc')
+            ->take(6)
+            ->get();
+
+        // tour hot (xem nhiều)
+        $hotTours = Tour::with(['category','images'])
+            ->orderBy('views','desc')
+            ->take(6)
+            ->get();
+        return view('clients.contact',compact(
             'latestTours',
             'featuredTours',
             'cheapTours',
