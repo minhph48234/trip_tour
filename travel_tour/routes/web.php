@@ -41,7 +41,7 @@ Route::prefix('tours')->name('client.tours.')->group(function () {
     //  CHI TIẾT TOUR
     Route::get('/{slug}', [HomeController::class,'show'])
         ->name('show');
-//abc
+
 });
 /*
 |--------------------------------------------------------------------------
