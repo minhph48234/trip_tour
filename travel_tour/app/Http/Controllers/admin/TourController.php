@@ -12,15 +12,27 @@ class TourController extends Controller
 {
 
     // Danh sách tour
-    public function index()
+    public function index(Request $request)
     {
-        $tours = Tour::with('category')
-            ->latest()
-            ->paginate(10);
+        $query = Tour::with('category');
 
-        return view('admin.tours.index', compact('tours'));
+        // 🔍 tìm theo tên
+        if ($request->keyword) {
+            $query->where('name', 'like', '%' . $request->keyword . '%');
+        }
+
+        // 🔍 lọc theo danh mục
+        if ($request->category_id) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        $tours = $query->latest()->paginate(10);
+
+        // 👉 load danh mục cho select
+        $categories = TourCategory::where('status',1)->get();
+
+        return view('admin.tours.index', compact('tours','categories'));
     }
-
 
     // Xem chi tiết tour
     public function show($id)
@@ -92,12 +104,12 @@ class TourController extends Controller
     // Form sửa
     public function edit($id)
     {
-        $tour = Tour::findOrFail($id);
+        $tour = Tour::with('itineraries')->findOrFail($id);
 
         $categories = TourCategory::where('status',1)->get();
 
         return view('admin.tours.edit', compact('tour','categories'));
-    }
+    }       
 
 
     // Cập nhật
