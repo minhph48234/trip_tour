@@ -30,7 +30,7 @@
         <label class="form-label">Danh mục cha</label>
         <select name="parent_id" class="form-select">
             <option value="">-- Không có (Danh mục gốc) --</option>
-
+          
             @isset($categories)
                 @foreach($categories as $category)
                     <option value="{{ $category->id }}">
