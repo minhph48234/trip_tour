@@ -23,12 +23,23 @@
 <label class="form-label">Buổi điểm danh</label>
 
 <select name="session" class="form-control" required>
-
-<option value="morning">Sáng</option>
-<option value="afternoon">Chiều</option>
-<option value="evening">Tối</option>
-
+    <option value="morning">Sáng</option>
+    <option value="afternoon">Chiều</option>
+    <option value="evening">Tối</option>
 </select>
+
+</div>
+
+{{-- ✅ THÊM NGÀY --}}
+<div class="mb-3">
+
+<label class="form-label">Ngày điểm danh</label>
+
+<input type="date" 
+       name="attendance_date" 
+       class="form-control"
+       value="{{ date('Y-m-d') }}"
+       required>
 
 </div>
 
@@ -81,10 +92,6 @@ value="absent">
 
 </td>
 
-
-
-
-
 </tr>
 
 @endforeach
@@ -95,9 +102,7 @@ value="absent">
 
 
 <button class="btn btn-success">
-
 Lưu điểm danh
-
 </button>
 
 </form>
