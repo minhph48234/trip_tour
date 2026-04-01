@@ -21,12 +21,12 @@ class DashboardController extends Controller
         THỐNG KÊ TỔNG QUAN
         =========================
         */
+
+        $tourCount = Tour::count();
         $bookingCount = Booking::count();
         $userCount = User::count();
-        $tourCount = Tour::count();
 
         // tổng doanh thu
-
         $revenue = Payment::where('status', 'paid')->sum('amount');
 
         /*
@@ -34,7 +34,9 @@ class DashboardController extends Controller
         XÁC ĐỊNH CỘT NGÀY
         =========================
         */
+
         $dateColumn = null;
+
         if (Schema::hasColumn('payments', 'created_at')) {
             $dateColumn = 'created_at';
         } elseif (Schema::hasColumn('payments', 'payment_date')) {
@@ -67,6 +69,7 @@ class DashboardController extends Controller
             $revenueYear = Payment::where('status', 'paid')
                 ->whereYear($dateColumn, $today->year)
                 ->sum('amount');
+
         } else {
             // fallback
             $revenueToday = 0;
@@ -91,11 +94,11 @@ class DashboardController extends Controller
         */
 
         $pendingFullBookings = Booking::withSum(
-            ['payments as total_paid' => function ($q) {
-                $q->where('status', 'paid');
-            }],
-            'amount'
-        )
+                ['payments as total_paid' => function ($q) {
+                    $q->where('status', 'paid');
+                }],
+                'amount'
+            )
             ->get()
             ->filter(function ($booking) {
                 return ($booking->total_paid ?? 0) < $booking->total_price;
@@ -131,17 +134,18 @@ class DashboardController extends Controller
             ->get();
 
         // doanh thu cao nhất
-        $topTours = Tour::query()
+        $topToursByRevenue = Tour::select(
+                'tours.*',
+                DB::raw('SUM(payments.amount) as total_revenue')
+            )
             ->join('trips', 'trips.tour_id', '=', 'tours.id')
             ->join('bookings', 'bookings.trip_id', '=', 'trips.id')
             ->join('payments', 'payments.booking_id', '=', 'bookings.id')
             ->where('payments.status', 'paid')
-            ->selectRaw('tours.id, tours.name, SUM(payments.amount) as total_revenue')
-            ->groupBy('tours.id', 'tours.name')
+            ->groupBy('tours.id')
             ->orderByDesc('total_revenue')
             ->limit(5)
             ->get();
-
 
         /*
         =========================
@@ -166,7 +170,7 @@ class DashboardController extends Controller
             'almostFullTrips',
 
             'topToursByBooking',
-            'topTours'
+            'topToursByRevenue'
         ));
     }
 }
