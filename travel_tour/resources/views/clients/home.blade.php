@@ -8,140 +8,202 @@
 
 @section('content')
 
+<div class="max-w-7xl mx-auto px-4 py-10">
 
-{{-- TOUR NỔI BẬT --}}
-<section class="max-w-7xl mx-auto px-4 py-16">
+    <div class="grid grid-cols-12 gap-6">
 
-    <div class="flex justify-between items-center mb-10">
-        <h2 class="text-3xl font-bold text-slate-800 uppercase">
-            Tour nổi bật
-        </h2>
+        {{-- ================= FILTER ================= --}}
+        <div class="col-span-12 lg:col-span-3">
 
-        <a href="{{ route('client.tours.featured') }}"
-        class="text-blue-600 font-semibold hover:underline">
-            Xem tất cả →
-        </a>
-    </div>
+            <form method="GET" action="{{ route('client.tours.search') }}"
+                class="bg-white p-5 rounded-2xl shadow space-y-6">
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <h3 class="font-bold text-lg">Tìm kiếm tour</h3>
 
-        @forelse($featuredTours as $tour)
+                <input type="text" name="keyword"
+                    class="w-full border rounded-lg px-3 py-2"
+                    placeholder="Tên tour...">
 
-        @include('clients.blocks.tour-card')
+                <input type="text" name="departure_location"
+                    class="w-full border rounded-lg px-3 py-2"
+                    placeholder="Điểm khởi hành">
 
-        @empty
+                <input type="text" name="destination"
+                    class="w-full border rounded-lg px-3 py-2"
+                    placeholder="Điểm đến">
 
-        <div class="col-span-full text-center py-20">
-            Không có tour nổi bật
+                <select name="category_id"
+                    class="w-full border rounded-lg px-3 py-2">
+                    <option value="">Tất cả danh mục</option>
+                    @foreach($categories as $cate)
+                        <option value="{{ $cate->id }}">
+                            {{ $cate->name }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <input type="date" name="start_date"
+                    class="w-full border rounded-lg px-3 py-2">
+
+                <input type="date" name="end_date"
+                    class="w-full border rounded-lg px-3 py-2">
+
+                <button class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">
+                    Tìm kiếm
+                </button>
+
+            </form>
+
         </div>
 
-        @endforelse
 
-    </div>
+        {{-- ================= TOUR LIST ================= --}}
+        <div class="col-span-12 lg:col-span-9">
 
-</section>
+            <h2 class="text-2xl font-bold mb-6">
+                Danh sách tour nổi bật
+            </h2>
 
+            <div class="space-y-6">
 
+                @forelse($featuredTours as $tour)
 
-{{-- TOUR MỚI NHẤT --}}
-<section class="max-w-7xl mx-auto px-4 py-16 bg-slate-50">
+                @php
+                    // IMAGE SAFE
+                    if(!empty($tour->thumbnail)){
+                        $img = asset('storage/'.$tour->thumbnail);
+                    } elseif($tour->images && $tour->images->count()){
+                        $img = asset('storage/'.$tour->images->first()->image);
+                    } else {
+                        $img = 'https://via.placeholder.com/600x400?text=No+Image';
+                    }
 
-    <div class="flex justify-between items-center mb-10">
-        <h2 class="text-3xl font-bold text-slate-800 uppercase">
-            Tour mới nhất
-        </h2>
+                    // RATING SAFE
+                    $rating = $tour->reviews ? $tour->reviews->avg('rating') : null;
+                @endphp
 
-        <a href="{{ route('client.tours.latest') }}"
-            class="text-blue-600 font-semibold hover:underline">
-            Xem tất cả →
-        </a>
-    </div>
+                <div class="bg-white rounded-2xl shadow flex flex-col md:flex-row overflow-hidden">
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    {{-- IMAGE --}}
+<div class="md:w-1/3 relative">
 
-        @forelse($latestTours as $tour)
+                        <img src="{{ $img }}"
+                            class="h-full w-full object-cover"
+                            onerror="this.src='https://via.placeholder.com/600x400?text=Image+Error'">
 
-        @include('clients.blocks.tour-card')
+                        @if($tour->views > 50)
+                        <div class="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 text-xs rounded">
+                            Tour nổi bật
+                        </div>
+                        @endif
 
-        @empty
+                    </div>
 
-        <div class="col-span-full text-center py-20">
-            Không có tour mới
+                    {{-- CONTENT --}}
+                    <div class="p-5 flex-1">
+
+                        {{-- TÊN --}}
+                        <h3 class="text-lg font-bold mb-2 text-blue-700">
+                            <a href="{{ route('client.tours.show',$tour->slug) }}">
+                                {{ $tour->name }}
+                            </a>
+                        </h3>
+
+                        {{-- DANH MỤC --}}
+                        <div class="text-sm text-orange-500 font-semibold mb-2">
+                            {{ optional($tour->category)->name ?? 'Du lịch' }}
+                        </div>
+
+                        {{-- ĐỊA ĐIỂM --}}
+                        <div class="text-sm text-gray-600 mb-2">
+                            Khởi hành: {{ $tour->departure_location ?? '---' }}
+                        </div>
+
+                        <div class="text-sm text-gray-600 mb-2">
+                            Điểm đến: {{ $tour->destination ?? '---' }}
+                        </div>
+
+                        {{-- THÔNG TIN --}}
+                        <div class="text-sm text-gray-600 mb-2">
+                            Thời gian: {{ $tour->duration ?? '---' }}
+                        </div>
+
+                        <div class="text-sm text-gray-600 mb-2">
+                            Phương tiện: {{ $tour->transport ?? '---' }}
+                        </div>
+
+                        <div class="text-sm text-gray-600 mb-3">
+                            Số chỗ tối đa: {{ $tour->max_people ?? '---' }}
+                        </div>
+
+                        {{-- ĐÁNH GIÁ --}}
+                        <div class="text-sm mb-3">
+                            Đánh giá:
+                            <span class="text-yellow-600 font-bold">
+                                {{ $rating ? number_format($rating,1) : '5.0' }}
+                            </span>
+                            ({{ $tour->reviews ? $tour->reviews->count() : 0 }} đánh giá)
+                        </div>
+
+                        {{-- NGÀY KHỞI HÀNH --}}
+                        @if($tour->trips && $tour->trips->count())
+                        <div class="mb-3">
+                            <span class="text-sm font-semibold">Ngày khởi hành:</span>
+                            <div class="flex flex-wrap gap-2 mt-1">
+                                @foreach($tour->trips->take(3) as $trip)
+<span class="border px-2 py-1 rounded text-xs text-red-600">
+                                        {{ \Carbon\Carbon::parse($trip->start_date)->format('d/m/Y') }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- GIÁ --}}
+                        <div class="flex justify-between items-center mt-4">
+
+                            <div>
+                                <div class="text-red-600 font-bold text-xl">
+                                    {{ number_format($tour->price) }} đ
+                                </div>
+
+                                @if($tour->child_price)
+                                <div class="text-xs text-gray-500">
+                                    Trẻ em: {{ number_format($tour->child_price) }} đ
+                                </div>
+                                @endif
+                            </div>
+
+                            <a href="{{ route('client.tours.show',$tour->slug) }}"
+                                class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700">
+                                Xem chi tiết
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                @empty
+
+                <div class="text-center py-20 text-gray-500">
+                    Không có tour nào
+                </div>
+
+                @endforelse
+
+            </div>
+
+            {{-- PAGINATION --}}
+            <div class="mt-6">
+                {{ $featuredTours->links() }}
+            </div>
+
         </div>
 
-        @endforelse
-
     </div>
 
-</section>
-
-
-
-{{-- TOUR GIÁ RẺ --}}
-<section class="max-w-7xl mx-auto px-4 py-16">
-
-    <div class="flex justify-between items-center mb-10">
-        <h2 class="text-3xl font-bold text-slate-800 uppercase">
-            Tour giá rẻ
-        </h2>
-
-        <a href="{{ route('client.tours.latest') }}"
-        class="text-blue-600 font-semibold hover:underline">
-            Xem tất cả →
-        </a>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-
-        @forelse($cheapTours as $tour)
-
-        @include('clients.blocks.tour-card')
-
-        @empty
-
-        <div class="col-span-full text-center py-20">
-            Không có tour giá rẻ
-        </div>
-
-        @endforelse
-
-    </div>
-
-</section>
-
-
-
-{{-- TOUR HOT --}}
-<section class="max-w-7xl mx-auto px-4 py-16 bg-slate-50">
-
-    <div class="flex justify-between items-center mb-10">
-        <h2 class="text-3xl font-bold text-slate-800 uppercase">
-            Tour hot
-        </h2>
-
-        <a href="{{ route('client.tours.cheap') }}"
-        class="text-blue-600 font-semibold hover:underline">
-            Xem tất cả →
-        </a>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-
-        @forelse($hotTours as $tour)
-
-        @include('clients.blocks.tour-card')
-
-        @empty
-
-        <div class="col-span-full text-center py-20">
-            Không có tour hot
-        </div>
-
-        @endforelse
-
-    </div>
-
-</section>
-
+</div>
 
 @endsection

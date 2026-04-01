@@ -5,51 +5,28 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Tour;
-use App\Models\Booking;
 use App\Models\TourCategory;
+
 class HomeController extends Controller
 {
-
     /* =============================
-       Trang chủ
+       Trang chủ (CHỈ TOUR NỔI BẬT)
     ============================== */
     public function index()
     {
-    $categories = TourCategory::all();
-        // tour mới nhất
-        $latestTours = Tour::with(['category','images'])
-            ->latest()
-            ->take(6)
-            ->get();
+        $categories = TourCategory::all();
 
-        // tour nổi bật (booking nhiều nhất)
-        $featuredTours = Tour::with(['category','images'])
+        // 👉 LẤY TẤT CẢ TOUR - SẮP XẾP THEO BOOKING
+        $featuredTours = Tour::with(['category','images','trips'])
             ->withCount('bookings')
             ->orderBy('bookings_count','desc')
-            ->take(6)
-            ->get();
+            ->paginate(9); // có phân trang
 
-        // tour giá thấp
-        $cheapTours = Tour::with(['category','images'])
-            ->orderBy('price','asc')
-            ->take(6)
-            ->get();
-
-        // tour hot (xem nhiều)
-        $hotTours = Tour::with(['category','images'])
-            ->orderBy('views','desc')
-            ->take(6)
-            ->get();
-
-        return view('clients.home',compact(
-            'latestTours',
+        return view('clients.home', compact(
             'featuredTours',
-            'cheapTours',
-            'hotTours',
             'categories'
         ));
     }
-
 
     /* =============================
        Chi tiết tour
@@ -64,257 +41,78 @@ class HomeController extends Controller
             'reviews.user'
         ])->where('slug',$slug)->firstOrFail();
 
-        // tăng lượt xem
         $tour->increment('views');
 
         $relatedTours = Tour::where('category_id',$tour->category_id)
             ->where('id','!=',$tour->id)
-            ->where('status','active')
+            ->where('status',1)
             ->take(4)
             ->get();
 
         return view('clients.tours.show', compact('tour','relatedTours'));
     }
 
-
     /* =============================
-       Trang tour nổi bật
+       SEARCH TOUR
     ============================== */
-    public function featured()
+    public function search(Request $request)
     {
-        $tours = Tour::with(['category','images'])
-            ->withCount('bookings')
+        $query = Tour::with(['category','images','trips']);
+
+        if ($request->keyword) {
+            $query->where('name','like','%'.$request->keyword.'%');
+        }
+
+        if ($request->departure_location) {
+            $query->where('departure_location','like','%'.$request->departure_location.'%');
+        }
+
+        if ($request->destination) {
+            $query->where('destination','like','%'.$request->destination.'%');
+        }
+
+        if ($request->category_id) {
+            $query->where('category_id',$request->category_id);
+        }
+
+        if ($request->start_date) {
+            $query->whereHas('trips', function($q) use ($request){
+                $q->whereDate('start_date','>=',$request->start_date);
+            });
+        }
+
+        if ($request->end_date) {
+            $query->whereHas('trips', function($q) use ($request){
+                $q->whereDate('end_date','<=',$request->end_date);
+            });
+        }
+
+        if ($request->price) {
+            switch ($request->price) {
+                case 1:
+                    $query->where('price','<',5000000);
+                    break;
+                case 2:
+                    $query->whereBetween('price',[5000000,10000000]);
+                    break;
+                case 3:
+                    $query->whereBetween('price',[10000000,20000000]);
+                    break;
+                case 4:
+                    $query->where('price','>',20000000);
+                    break;
+            }
+        }
+
+        $tours = $query
+            ->withCount('bookings') // thêm luôn để đồng bộ
             ->orderBy('bookings_count','desc')
             ->paginate(9);
 
-        return view('clients.tours.list',[
-            'title' => 'Tour nổi bật',
-            'tours' => $tours
-        ]);
-    }
+        $tours->appends($request->all());
 
-
-    /* =============================
-       Trang tour mới
-    ============================== */
-    public function latest()
-    {
-        $tours = Tour::with(['category','images'])
-            ->latest()
-            ->paginate(9);
-
-        return view('clients.tours.list',[
-            'title' => 'Tour mới nhất',
-            'tours' => $tours
-        ]);
-    }
-
-
-    /* =============================
-       Trang tour giá rẻ
-    ============================== */
-    public function cheap()
-    {
-        $tours = Tour::with(['category','images'])
-            ->orderBy('price','asc')
-            ->paginate(9);
-
-        return view('clients.tours.list',[
-            'title' => 'Tour giá rẻ',
-            'tours' => $tours
-        ]);
-    }
-
-
-    /* =============================
-       Trang tour hot
-    ============================== */
-    public function hot()
-    {
-        $tours = Tour::with(['category','images'])
-            ->orderBy('views','desc')
-            ->paginate(9);
-
-        return view('clients.tours.list',[
-            'title' => 'Tour hot',
-            'tours' => $tours
-        ]);
-    }
-    //trang dịch vụ
-    public function service(){
         $categories = TourCategory::all();
-        // tour mới nhất
-        $latestTours = Tour::with(['category','images'])
-            ->latest()
-            ->take(6)
-            ->get();
 
-        // tour nổi bật (booking nhiều nhất)
-        $featuredTours = Tour::with(['category','images'])
-            ->withCount('bookings')
-            ->orderBy('bookings_count','desc')
-            ->take(6)
-            ->get();
-
-        // tour giá thấp
-        $cheapTours = Tour::with(['category','images'])
-            ->orderBy('price','asc')
-            ->take(6)
-            ->get();
-
-        // tour hot (xem nhiều)
-        $hotTours = Tour::with(['category','images'])
-            ->orderBy('views','desc')
-            ->take(6)
-            ->get();
-        return view('clients.service',compact(
-            'latestTours',
-            'featuredTours',
-            'cheapTours',
-            'hotTours',
-            'categories'));
+        return view('clients.search', compact('tours','categories'));
     }
-    // trang liên hệ
-    public function contact(){
-        $categories = TourCategory::all();
-        // tour mới nhất
-        $latestTours = Tour::with(['category','images'])
-            ->latest()
-            ->take(6)
-            ->get();
-
-        // tour nổi bật (booking nhiều nhất)
-        $featuredTours = Tour::with(['category','images'])
-            ->withCount('bookings')
-            ->orderBy('bookings_count','desc')
-            ->take(6)
-            ->get();
-
-        // tour giá thấp
-        $cheapTours = Tour::with(['category','images'])
-            ->orderBy('price','asc')
-            ->take(6)
-            ->get();
-
-        // tour hot (xem nhiều)
-        $hotTours = Tour::with(['category','images'])
-            ->orderBy('views','desc')
-            ->take(6)
-            ->get();
-        return view('clients.contact',compact(
-            'latestTours',
-            'featuredTours',
-            'cheapTours',
-            'hotTours',
-            'categories'));
-    }
-    //trang about
-    public function about(){
-        $categories = TourCategory::all();
-        // tour mới nhất
-        $latestTours = Tour::with(['category','images'])
-            ->latest()
-            ->take(6)
-            ->get();
-
-        // tour nổi bật (booking nhiều nhất)
-        $featuredTours = Tour::with(['category','images'])
-            ->withCount('bookings')
-            ->orderBy('bookings_count','desc')
-            ->take(6)
-            ->get();
-
-        // tour giá thấp
-        $cheapTours = Tour::with(['category','images'])
-            ->orderBy('price','asc')
-            ->take(6)
-            ->get();
-
-        // tour hot (xem nhiều)
-        $hotTours = Tour::with(['category','images'])
-            ->orderBy('views','desc')
-            ->take(6)
-            ->get();
-        return view('clients.about',compact(
-            'latestTours',
-            'featuredTours',
-            'cheapTours',
-            'hotTours',
-            'categories'));
-    }
-    //destinations
-    public function destinations(){
-        $categories = TourCategory::all();
-        // tour mới nhất
-        $latestTours = Tour::with(['category','images'])
-            ->latest()
-            ->take(6)
-            ->get();
-
-        // tour nổi bật (booking nhiều nhất)
-        $featuredTours = Tour::with(['category','images'])
-            ->withCount('bookings')
-            ->orderBy('bookings_count','desc')
-            ->take(6)
-            ->get();
-
-        // tour giá thấp
-        $cheapTours = Tour::with(['category','images'])
-            ->orderBy('price','asc')
-            ->take(6)
-            ->get();
-
-        // tour hot (xem nhiều)
-        $hotTours = Tour::with(['category','images'])
-            ->orderBy('views','desc')
-            ->take(6)
-            ->get();
-        return view('clients.destinations',compact(
-            'latestTours',
-            'featuredTours',
-            'cheapTours',
-            'hotTours',
-            'categories'));
-    }
-// tìm kiếm tour
-   public function search(Request $request)
-{
-
-$query = Tour::with(['category','images','trips']);
-
-
-// tìm theo tên
-if($request->keyword){
-
-$query->where('name','like','%'.$request->keyword.'%');
-
-}
-
-
-// tìm theo danh mục
-if($request->category_id){
-
-$query->where('category_id',$request->category_id);
-
-}
-
-
-// tìm theo ngày khởi hành
-if($request->departure_date){
-
-$query->whereHas('trips',function($q) use ($request){
-
-$q->whereDate('start_date',$request->departure_date);
-
-});
-
-}
-
-
-// lấy kết quả
-$tours = $query->paginate(9);
-
-return view('clients.search',compact('tours'));
-
-}
 }
