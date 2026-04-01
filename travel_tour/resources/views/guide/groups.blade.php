@@ -40,8 +40,13 @@ Danh sách khách
 </a>
 
 <a href="{{ route('guide.attendance',$group->id) }}"
-class="btn btn-sm btn-success">
+class="btn btn-primary">
 Điểm danh
+</a>
+
+<a href="{{ route('guide.groups.detail', $group->id) }}"
+class="btn btn-sm btn-success">
+Chi tiết tour
 </a>
 
 </td>

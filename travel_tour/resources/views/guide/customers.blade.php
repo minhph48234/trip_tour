@@ -20,16 +20,12 @@
 <tbody>
 
 @foreach($customers as $c)
-
 <tr>
-
-<td>{{ $c->id }}</td>
-<td>{{ $c->name }}</td>
-<td>{{ $c->gender }}</td>
-<td>{{ $c->phone }}</td>
-
+    <td>{{ $c->id }}</td>
+    <td>{{ $c->name }}</td>
+    <td>{{ $c->gender }}</td>
+    <td>{{ $c->phone }}</td>
 </tr>
-
 @endforeach
 
 </tbody>
