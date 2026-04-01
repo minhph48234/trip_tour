@@ -3,24 +3,106 @@
 namespace App\Http\Controllers\Guide;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
 use App\Models\Group;
+use App\Models\Booking;
+use Illuminate\Support\Facades\Auth;
 use App\Models\BookingCustomer;
-use App\Models\Attendance;
+use Illuminate\Http\Request;
+use App\Models\Attendance; 
 use App\Models\AttendanceDetail;
 
 class GuideController extends Controller
 {
+    /*
+    =========================
+    DASHBOARD
+    =========================
+    */
+    public function dashboard()
+    {
+        // ⚠️ Nếu guide_id = user_id thì dùng Auth::id()
+        $guideId = Auth::id();
 
-// dashboard
-public function dashboard()
-{
-    return view('guide.dashboard');
-}
+        /*
+        =========================
+        DANH SÁCH GROUP
+        =========================
+        */
+        $groups = Group::with(['trip.tour','bookings'])
+            ->where('guide_id', $guideId)
+            ->get();
 
+        /*
+        =========================
+        TOUR HÔM NAY
+        =========================
+        */
+        $todayTours = Group::with(['trip.tour'])
+            ->where('guide_id', $guideId)
+            ->whereHas('trip', function($q){
+                $q->whereDate('start_date', now());
+            })
+            ->get();
 
-// group được phân công
+        /*
+        =========================
+        TOUR ĐANG DIỄN RA
+        =========================
+        */
+        $ongoingTours = Group::where('guide_id', $guideId)
+            ->whereHas('trip', function($q){
+                $q->whereDate('start_date','<=', now())
+                  ->whereDate('end_date','>=', now());
+            })
+            ->count();
+
+        /*
+        =========================
+        TỔNG KHÁCH
+        =========================
+        */
+        $totalCustomers = Booking::whereHas('group', function($q) use ($guideId){
+            $q->where('guide_id', $guideId);
+        })->sum('quantity');
+
+        /*
+        =========================
+        TỔNG TOUR
+        =========================
+        */
+        $totalTours = $groups->count();
+
+        /*
+        =========================
+        GROUP MỚI NHẤT (FIX LỖI Ở ĐÂY)
+        =========================
+        */
+        $latestGroups = Group::with(['trip.tour'])
+            ->where('guide_id', $guideId)
+            ->orderByDesc('id') // ✅ FIX: thay latest()
+            ->limit(5)
+            ->get();
+
+        /*
+        =========================
+        RETURN VIEW
+        =========================
+        */
+        return view('guide.dashboard', compact(
+            'totalTours',
+            'totalCustomers',
+            'ongoingTours',
+            'todayTours',
+            'latestGroups'
+        ));
+    }
+
+    /*
+    =========================
+    DANH SÁCH GROUP
+    =========================
+    */
+    // group được phân công
 public function groups()
 {
 
@@ -121,16 +203,11 @@ return redirect()
 
 }
 
-// lịch sử tour đã dẫn
-public function history()
+public function groupDetail($id)
 {
-    $groups = \App\Models\Group::with(['trip.tour'])
-        ->where('guide_id', auth()->id())
-        ->where('status', 'completed') // hoặc done
-        ->orderBy('id','desc')
-        ->get();
+    $group = Group::with(['trip.tour', 'bookings.customers'])
+        ->findOrFail($id);
 
-    return view('guide.history', compact('groups'));
+    return view('guide.group_detail', compact('group'));
 }
-
 }
