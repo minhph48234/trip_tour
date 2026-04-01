@@ -36,7 +36,7 @@ Tour của tôi
 </li>
 
 <li class="nav-item">
-<a class="nav-link" href="">
+<a class="nav-link" href="{{ route('guide.history') }}">
 Lịch sử tour đã dẫn
 </a>
 </li>
