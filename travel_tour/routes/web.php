@@ -14,7 +14,8 @@ use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Admin\GroupController;
 
 use App\Http\Controllers\Guide\GuideController;
-
+use App\Http\Controllers\Client\PaymentController;
+use App\Http\Controllers\Admin\DashboardController;
 /*
 |--------------------------------------------------------------------------
 | PUBLIC ROUTES
@@ -33,27 +34,11 @@ Route::get('/', [HomeController::class,'index'])->name('home');
 
 Route::prefix('tours')->name('client.tours.')->group(function () {
 
-    // tìm kiếm
+    //  TÌM KIẾM TOUR (FILTER FULL)
     Route::get('/search', [HomeController::class,'search'])
         ->name('search');
 
-    // tour nổi bật
-    Route::get('/featured', [HomeController::class,'featured'])
-        ->name('featured');
-
-    // tour mới
-    Route::get('/latest', [HomeController::class,'latest'])
-        ->name('latest');
-
-    // tour giá rẻ
-    Route::get('/cheap', [HomeController::class,'cheap'])
-        ->name('cheap');
-
-    // tour hot
-    Route::get('/hot', [HomeController::class,'hot'])
-        ->name('hot');
-
-    // chi tiết tour (LUÔN ĐỂ CUỐI)
+    //  CHI TIẾT TOUR
     Route::get('/{slug}', [HomeController::class,'show'])
         ->name('show');
 
@@ -96,15 +81,21 @@ Route::middleware(['auth','role:admin'])
     ->name('admin.')
     ->group(function () {
 
-        Route::get('/dashboard', function () {
-            return view('admin.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class,'index'])
+            ->name('dashboard');
 
         // CRUD Category
         Route::resource('categories', CategoryController::class);
 
         // CRUD Tour
         Route::resource('tours', TourController::class);
+
+        // CRUD Itinerary
+        Route::post('/tours/{tour}/itineraries', [\App\Http\Controllers\Admin\TourItineraryController::class,'store'])
+            ->name('tours.itineraries.store');
+
+        Route::delete('/itineraries/{id}', [\App\Http\Controllers\Admin\TourItineraryController::class,'destroy'])
+            ->name('itineraries.destroy');
 
         // CRUD Tour Guide
         Route::resource('guides', TourGuideController::class);
@@ -129,6 +120,14 @@ Route::middleware(['auth','role:admin'])
         Route::put('/groups/{id}/assign-guide',
             [GroupController::class,'assignGuide'])
             ->name('groups.assignGuide');
+
+        // danh sách điểm danh
+        Route::get('/attendances', [\App\Http\Controllers\Admin\AttendanceController::class,'index'])
+            ->name('attendances.index');
+
+        // chi tiết điểm danh
+        Route::get('/attendances/{id}', [\App\Http\Controllers\Admin\AttendanceController::class,'show'])
+            ->name('attendances.show');
 });
 
 
@@ -143,15 +142,17 @@ Route::middleware(['auth','role:guide'])
     ->name('guide.')
     ->group(function () {
 
-        Route::get('/dashboard', function () {
-            return view('guide.dashboard');
-        })->name('dashboard');
-
+        // DASHBOARD
         Route::get('/dashboard', [GuideController::class,'dashboard'])
             ->name('dashboard');
 
+
         Route::get('/groups', [GuideController::class,'groups'])
             ->name('groups');
+
+        // CHI TIẾT TOUR ĐƯỢC PHÂN CÔNG
+        Route::get('/groups/{id}', [GuideController::class,'groupDetail'])
+            ->name('groups.detail');
 
         Route::get('/groups/{id}/customers', [GuideController::class,'customers'])
             ->name('customers');
@@ -162,6 +163,13 @@ Route::middleware(['auth','role:guide'])
         Route::post('/groups/{id}/attendance', [GuideController::class,'saveAttendance'])
             ->name('attendance.save');
 
+        //  LỊCH SỬ TOUR ĐÃ DẪN
+        Route::get('/history', [GuideController::class,'history'])
+            ->name('history');
+
+        // chi tiết tour
+        Route::get('/guide/groups/{id}', [GuideController::class, 'groupDetail'])
+        ->name('guide.groups.detail');
 });
 
 
@@ -210,4 +218,37 @@ Route::middleware(['auth','role:user'])
         Route::get('/detail/{id}', [ClientBookingController::class,'show'])
             ->name('show');
 
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| PAYMENT - USER
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth','role:user'])
+    ->prefix('payment')
+    ->name('payment.')
+    ->group(function () {
+
+        // chuyển sang cổng thanh toán VNPAY
+        Route::get('/vnpay/{booking}', [PaymentController::class,'vnpay_payment'])
+            ->name('vnpay');
+
+        //  thanh toán phần còn lại
+        Route::get('/vnpay-final/{booking}', [PaymentController::class,'vnpayFinal'])
+            ->name('vnpayFinal');
+
+        // trang return từ VNPAY
+        Route::get('/vnpay-return', [PaymentController::class,'vnpayReturn'])
+            ->name('vnpayReturn');
+
+         //  lịch sử thanh toán
+        Route::get('/history', [PaymentController::class,'history'])
+            ->name('history');
+
+        //  CHI TIẾT THANH TOÁN
+        Route::get('/{id}', [PaymentController::class,'show'])
+            ->name('show');
 });
