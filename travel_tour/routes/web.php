@@ -16,7 +16,7 @@ use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Guide\GuideController;
 use App\Http\Controllers\Client\PaymentController;
 use App\Http\Controllers\Admin\DashboardController;
-/*
+/*  
 |--------------------------------------------------------------------------
 | PUBLIC ROUTES
 |--------------------------------------------------------------------------
