@@ -76,7 +76,7 @@
 <div class="card border-0 shadow-sm rounded-4 mt-5 overflow-hidden">
     <div class="card-header bg-white p-4 border-0 d-flex justify-content-between align-items-center">
         <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-history me-2 text-primary"></i>Tours mới cập nhật</h5>
-        <a href="" class="nav-link-admin btn btn-primary btn-sm px-4 rounded-pill shadow-sm border-0">
+        <a href="{{ route('admin.tours.create') }}" class="nav-link-admin btn btn-primary btn-sm px-4 rounded-pill shadow-sm border-0">
             <i class="fas fa-plus me-1"></i> Thêm tour mới
         </a>
     </div>
