@@ -20,13 +20,14 @@ class BookingController extends Controller
     ===============================
     */
 
-    public function create($tripId)
+    public function create(Request $request, $trip = null)
     {
-        $trip = Trip::with('tour')->findOrFail($tripId);
-
-        if ($trip->status != 'open') {
-            return back()->with('error', 'Tour này đã đóng');
+        // ưu tiên lấy từ query (?trip=)
+        if($request->trip){
+            $trip = $request->trip;
         }
+
+        $trip = \App\Models\Trip::findOrFail($trip);
 
         return view('clients.booking.create', compact('trip'));
     }
@@ -107,6 +108,7 @@ class BookingController extends Controller
             $bookingCode = 'BK' . date('YmdHis');
 
             $totalPrice = $trip->tour->price * $quantity;
+            $depositAmount = $totalPrice * 0.5; // số tiền cần cọc
 
             $booking = Booking::create([
                 'booking_code' => $bookingCode,
@@ -119,6 +121,9 @@ class BookingController extends Controller
                 'customer_email' => $request->customer_email,
                 'quantity' => $quantity,
                 'total_price' => $totalPrice,
+                
+                'deposit_amount' => $depositAmount,
+                'paid_amount' => 0,
                 'status' => 'pending'
             ]);
 
@@ -179,25 +184,30 @@ class BookingController extends Controller
         }
     }
 
-
-
     /*
     ===============================
     LỊCH SỬ BOOKING
     ===============================
     */
 
-    public function myBookings()
+   public function myBookings() 
     {
-
         $bookings = Booking::where('user_id', auth()->id())
-            ->with('tour', 'trip', 'group')
+            ->with([
+                'trip.tour',
+                'group',
+                'payments'
+            ])
             ->latest()
             ->paginate(10);
 
+        // ✅ cập nhật status cho từng booking
+        foreach ($bookings as $booking) {
+            $this->updateBookingStatus($booking);
+        }
+
         return view('clients.booking.history', compact('bookings'));
     }
-
 
 
     /*
@@ -208,16 +218,39 @@ class BookingController extends Controller
 
     public function show($id)
     {
-
         $booking = Booking::with([
-            'tour',
-            'trip',
+            'trip.tour',
             'group',
-            'customers'
+            'customers',
+            'payments'
         ])
-            ->where('user_id', auth()->id())
-            ->findOrFail($id);
+        ->where('id', $id)
+        ->where('user_id', auth()->id())
+        ->firstOrFail();
 
-        return view('clients.booking.show', compact('booking'));
+        // ✅ cập nhật trạng thái theo tiền đã thanh toán
+        $this->updateBookingStatus($booking);
+
+        $payments = $booking->payments;
+
+        return view('clients.booking.show', compact('booking', 'payments'));
+    }
+
+    private function updateBookingStatus($booking)
+    {
+        $paid = $booking->paid_amount ?? 0;
+        $deposit = $booking->deposit_amount ?? 0;
+        $total = $booking->total_price ?? 0;
+
+        if ($paid >= $total) {
+            $booking->status = 'paid';
+        } elseif ($paid >= $deposit) {
+            $booking->status = 'deposit_paid';
+        } else {
+            // 🔥 KEY: < deposit vẫn là pending
+            $booking->status = 'pending';
+        }
+
+        $booking->save();
     }
 }
