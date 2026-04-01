@@ -21,19 +21,31 @@ class GroupController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function index()
-{
+   public function index(Request $request)
+    {
+        $query = Group::with([
+            'trip.tour',
+            'guide'
+        ]);
 
-    $groups = Group::with([
-        'trip.tour',
-        'guide'
-    ])
-    ->orderBy('id','desc')
-    ->paginate(10);
+        // ================= SEARCH TOUR NAME =================
+        if ($request->filled('keyword')) {
+            $query->whereHas('trip.tour', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->keyword . '%');
+            });
+        }
 
-    return view('admin.groups.index',compact('groups'));
+        // ================= SEARCH DATE =================
+        if ($request->filled('start_date')) {
+            $query->whereHas('trip', function ($q) use ($request) {
+                $q->whereDate('start_date', $request->start_date);
+            });
+        }
 
-}
+        $groups = $query->orderBy('id', 'desc')->paginate(10);
+
+        return view('admin.groups.index', compact('groups'));
+    }
 
 
 
@@ -66,35 +78,75 @@ class GroupController extends Controller
     |--------------------------------------------------------------------------
     */
 
-   public function assignGuide(Request $request,$id)
+   public function assignGuide(Request $request, $id)
 {
+    $request->validate([
+        'guide_id' => 'required|exists:tour_guides,id'
+    ]);
 
     $group = Group::with('trip')->findOrFail($id);
 
-    $guide_id = $request->guide_id;
+    $guide = TourGuide::findOrFail($request->guide_id);
 
-    $tripDate = $group->trip->start_date;
+    $tripStart = $group->trip->start_date;
+    $tripEnd   = $group->trip->end_date;
 
+    /*
+    |--------------------------------------------------
+    | 1. CHECK STATUS GUIDE
+    |--------------------------------------------------
+    */
 
-    // kiểm tra guide có tour cùng ngày không
-    $exists = Group::where('guide_id',$guide_id)
-        ->whereHas('trip',function($q) use ($tripDate){
-            $q->whereDate('start_date',$tripDate);
+    if ($guide->status == 'inactive') {
+        return back()->with('error', 'Hướng dẫn viên đã bị khóa');
+    }
+
+    if ($guide->status == 'busy') {
+        return back()->with('error', 'Hướng dẫn viên đang bận');
+    }
+
+    /*
+    |--------------------------------------------------
+    | 2. CHECK TRÙNG LỊCH (NÂNG CAO - REAL PROJECT)
+    |--------------------------------------------------
+    */
+
+    $exists = Group::where('guide_id', $guide->id)
+        ->whereHas('trip', function ($q) use ($tripStart, $tripEnd) {
+            $q->where(function ($query) use ($tripStart, $tripEnd) {
+
+                // trùng khoảng thời gian
+                $query->whereBetween('start_date', [$tripStart, $tripEnd])
+                      ->orWhereBetween('end_date', [$tripStart, $tripEnd]);
+            });
         })
         ->exists();
 
-
-    if($exists){
-        return back()->with('error','Hướng dẫn viên đã có tour trong ngày này');
+    if ($exists) {
+        return back()->with('error', 'Hướng dẫn viên bị trùng lịch');
     }
 
+    /*
+    |--------------------------------------------------
+    | 3. ASSIGN GUIDE
+    |--------------------------------------------------
+    */
 
     $group->update([
-        'guide_id'=>$guide_id
+        'guide_id' => $guide->id
     ]);
 
-    return back()->with('success','Đã phân công hướng dẫn viên');
+    /*
+    |--------------------------------------------------
+    | 4. UPDATE STATUS GUIDE -> BUSY
+    |--------------------------------------------------
+    */
 
+    $guide->update([
+        'status' => 'busy'
+    ]);
+
+    return back()->with('success', 'Phân công thành công');
 }
 
 
