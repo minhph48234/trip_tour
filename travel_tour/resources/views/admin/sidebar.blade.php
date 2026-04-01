@@ -4,7 +4,7 @@
 </div>
 
 <nav class="mt-3 flex-column d-flex">
-    <a href="/admin" class="nav-link-admin {{ Request::is('admin') ? 'active' : '' }}">
+    <a href="{{ route('admin.dashboard') }}" class="nav-link-admin {{ Request::is('admin') ? 'active' : '' }}">
         <i class="fa fa-tachometer-alt me-3"></i> Dashboard
     </a>
 

@@ -88,6 +88,7 @@ Route::middleware(['auth','role:admin'])
     ->name('admin.')
     ->group(function () {
 
+
         Route::get('/dashboard', [DashboardController::class,'index'])
             ->name('dashboard');
 
