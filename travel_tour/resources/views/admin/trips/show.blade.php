@@ -1,6 +1,5 @@
 @extends('admin.layouts.layout')
 
-
 @section('content')
 
 <div class="container">
@@ -10,27 +9,53 @@
 <ul class="list-group">
 
 <li class="list-group-item">
-Tour: {{ $trip->tour->name }}
+<b>Tour:</b> {{ $trip->tour->name }}
 </li>
 
 <li class="list-group-item">
-Ngày khởi hành: {{ $trip->start_date }}
+<b>Ngày khởi hành:</b> 
+{{ \Carbon\Carbon::parse($trip->start_date)->format('d/m/Y') }}
 </li>
 
 <li class="list-group-item">
-Ngày kết thúc: {{ $trip->end_date }}
+<b>Ngày kết thúc:</b> 
+{{ \Carbon\Carbon::parse($trip->end_date)->format('d/m/Y') }}
 </li>
 
 <li class="list-group-item">
-Số chỗ tối đa: {{ $trip->max_people }}
+<b>Số chỗ tối đa:</b> {{ $trip->max_people }}
 </li>
 
 <li class="list-group-item">
-Đã đặt: {{ $trip->current_people }}
+<b>Đã đặt:</b> {{ $trip->current_people }}
 </li>
 
 <li class="list-group-item">
-Trạng thái: {{ $trip->status }}
+
+<b>Trạng thái:</b>
+
+@php
+$statusText = match($trip->status){
+    'open' => 'Đang mở',
+    'full' => 'Đã đầy',
+    'started' => 'Đang khởi hành',
+    'finished' => 'Đã kết thúc',
+    default => $trip->status
+};
+
+$statusColor = match($trip->status){
+    'open' => 'color:green; font-weight:bold',
+    'full' => 'color:orange; font-weight:bold',
+    'started' => 'color:blue; font-weight:bold',
+    'finished' => 'color:red; font-weight:bold',
+    default => ''
+};
+@endphp
+
+<span style="{{ $statusColor }}">
+    {{ $statusText }}
+</span>
+
 </li>
 
 </ul>
