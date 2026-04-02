@@ -136,6 +136,23 @@ Route::middleware(['auth','role:admin'])
         // chi tiết điểm danh
         Route::get('/attendances/{id}', [\App\Http\Controllers\Admin\AttendanceController::class,'show'])
             ->name('attendances.show');
+
+        // PAYMENT ADMIN
+        Route::prefix('payments')->name('payments.')->group(function () {
+
+        // danh sách thanh toán
+        Route::get('/', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])
+            ->name('index');
+
+        // chi tiết thanh toán
+        Route::get('/{id}', [\App\Http\Controllers\Admin\PaymentController::class, 'show'])
+            ->name('show');
+
+        // xác nhận thanh toán
+        Route::post('/{id}/confirm', [\App\Http\Controllers\Admin\PaymentController::class, 'confirm'])
+            ->name('confirm');
+
+        });
 });
 
 
