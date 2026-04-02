@@ -4,12 +4,15 @@
 </div>
 
 <nav class="mt-3 flex-column d-flex">
+
     <a href="{{ route('admin.dashboard') }}" class="nav-link-admin {{ Request::is('admin') ? 'active' : '' }}">
         <i class="fa fa-tachometer-alt me-3"></i> Dashboard
     </a>
 
+    {{-- ================= DANH MỤC TOUR ================= --}}
     <div class="nav-item">
-        <a href="#submenu-categories" data-bs-toggle="collapse" class="nav-link-admin d-flex justify-content-between align-items-center {{ Request::is('admin/categories*') ? 'active' : '' }}">
+        <a href="#submenu-categories" data-bs-toggle="collapse"
+           class="nav-link-admin d-flex justify-content-between align-items-center {{ Request::is('admin/categories*') ? 'active' : '' }}">
             <span><i class="fa fa-list me-3"></i> Danh mục tour</span>
             <i class="fa fa-chevron-down small opacity-50"></i>
         </a>
@@ -18,15 +21,17 @@
                 <a href="{{ route('admin.categories.index') }}" class="nav-link-admin py-2 ps-5 small">
                     <i class="fa fa-angle-right me-2"></i> Tất cả danh mục
                 </a>
-                <a href="/admin/categories/create" class="nav-link-admin py-2 ps-5 small">
+                <a href="{{ route('admin.categories.create') }}" class="nav-link-admin py-2 ps-5 small">
                     <i class="fa fa-angle-right me-2"></i> Thêm mới
                 </a>
             </div>
         </div>
     </div>
 
+    {{-- ================= TOUR ================= --}}
     <div class="nav-item">
-        <a href="#submenu-tours" data-bs-toggle="collapse" class="nav-link-admin d-flex justify-content-between align-items-center {{ Request::is('admin/tours*') ? 'active' : '' }}">
+        <a href="#submenu-tours" data-bs-toggle="collapse"
+           class="nav-link-admin d-flex justify-content-between align-items-center {{ Request::is('admin/tours*') ? 'active' : '' }}">
             <span><i class="fa fa-map-marker-alt me-3"></i> Quản lý tour</span>
             <i class="fa fa-chevron-down small opacity-50"></i>
         </a>
@@ -42,10 +47,11 @@
             </div>
         </div>
     </div>
-</nav>
 
-<div class="nav-item">
-        <a href="#submenu-guides" data-bs-toggle="collapse" class="nav-link-admin d-flex justify-content-between align-items-center {{ Request::is('admin/guides*') ? 'active' : '' }}">
+    {{-- ================= HƯỚNG DẪN VIÊN ================= --}}
+    <div class="nav-item">
+        <a href="#submenu-guides" data-bs-toggle="collapse"
+           class="nav-link-admin d-flex justify-content-between align-items-center {{ Request::is('admin/guides*') ? 'active' : '' }}">
             <span><i class="fa fa-user-tie me-3"></i> Hướng dẫn viên</span>
             <i class="fa fa-chevron-down small opacity-50"></i>
         </a>
@@ -62,8 +68,10 @@
         </div>
     </div>
 
+    {{-- ================= USER ================= --}}
     <div class="nav-item">
-        <a href="#submenu-users" data-bs-toggle="collapse" class="nav-link-admin d-flex justify-content-between align-items-center {{ Request::is('admin/users*') ? 'active' : '' }}">
+        <a href="#submenu-users" data-bs-toggle="collapse"
+           class="nav-link-admin d-flex justify-content-between align-items-center {{ Request::is('admin/users*') ? 'active' : '' }}">
             <span><i class="fa fa-users me-3"></i> Người dùng</span>
             <i class="fa fa-chevron-down small opacity-50"></i>
         </a>
@@ -76,79 +84,78 @@
         </div>
     </div>
 
-    <a href="{{ route('admin.bookings.index') }}" 
-        class="nav-link-admin {{ Request::is('admin/bookings*') ? 'active' : '' }}">
-
+    {{-- ================= BOOKING ================= --}}
+    <a href="{{ route('admin.bookings.index') }}"
+       class="nav-link-admin {{ Request::is('admin/bookings*') ? 'active' : '' }}">
         <i class="fa fa-shopping-cart me-3"></i>
         Đơn đặt tour
-
     </a>
 
-    
-    <a href="{{ route('admin.trips.index') }}" 
-        class="nav-link-admin {{ Request::is('admin/trips*') ? 'active' : '' }}">
-        
+    {{-- ================= PAYMENT (MỚI THÊM) ================= --}}
+    <a href="{{ route('admin.payments.index') }}"
+       class="nav-link-admin {{ Request::is('admin/payments*') ? 'active' : '' }}">
+        <i class="fa fa-credit-card me-3"></i>
+        Quản lý thanh toán
+    </a>
+
+    {{-- ================= TRIP ================= --}}
+    <a href="{{ route('admin.trips.index') }}"
+       class="nav-link-admin {{ Request::is('admin/trips*') ? 'active' : '' }}">
         <i class="nav-icon fas fa-calendar-alt"></i>
         <span> Quản lý lịch khởi hành</span>
-
     </a>
 
-    <a href="{{ route('admin.groups.index') }}" 
-        class="nav-link-admin {{ Request::is('admin/groups*') ? 'active' : '' }}">
-        
-        <i class="fa fa-route me-3"></i> 
-            <span>
-                Quản lý đoàn khởi hành
-            </span>
+    {{-- ================= GROUP ================= --}}
+    <a href="{{ route('admin.groups.index') }}"
+       class="nav-link-admin {{ Request::is('admin/groups*') ? 'active' : '' }}">
+        <i class="fa fa-route me-3"></i>
+        <span>Quản lý đoàn khởi hành</span>
     </a>
 
-    <a href="{{ route('admin.attendances.index') }}" 
-        class="nav-link-admin {{ Request::is('admin/groups*') ? 'active' : '' }}">
-        
+    {{-- ================= ATTENDANCE ================= --}}
+    <a href="{{ route('admin.attendances.index') }}"
+       class="nav-link-admin {{ Request::is('admin/attendances*') ? 'active' : '' }}">
         <i class="fa fa-clipboard-list me-3"></i>
-            <span>
-                Quản lý điểm danh
-            </span>
+        <span>Quản lý điểm danh</span>
     </a>
 
-
-
-
-        <form method="POST" action="/logout">
+    {{-- ================= LOGOUT ================= --}}
+    <form method="POST" action="/logout" class="mt-3 px-3">
         @csrf
-        <button class="btn btn-danger">Logout</button>
-        </form>
-        <style>
-    .nav-link-admin {
-        padding: 14px 25px;
-        color: #94a3b8 !important;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        transition: 0.3s;
-        cursor: pointer;
-    }
-    .nav-link-admin:hover {
-        background: rgba(255,255,255,0.05);
-        color: white !important;
-    }
-    .nav-link-admin.active {
-        background: var(--primary-color) !important;
-        color: white !important;
-        border-right: 4px solid white;
-    }
-    /* Style cho vùng menu con */
-    .bg-dark-subtle {
-        background-color: rgba(0, 0, 0, 0.2) !important;
-    }
-    .nav-link-admin.small {
-        font-size: 0.85rem;
-        padding-top: 8px;
-        padding-bottom: 8px;
-    }
-    /* Xoay icon khi mở menu */
-    [aria-expanded="true"] .fa-chevron-down {
-        transform: rotate(180deg);
-        transition: 0.3s;
-    }
+        <button class="btn btn-danger w-100">Logout</button>
+    </form>
+
+</nav>
+
+<style>
+.nav-link-admin {
+    padding: 14px 25px;
+    color: #94a3b8 !important;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    transition: 0.3s;
+    cursor: pointer;
+}
+.nav-link-admin:hover {
+    background: rgba(255,255,255,0.05);
+    color: white !important;
+}
+.nav-link-admin.active {
+    background: var(--primary-color) !important;
+    color: white !important;
+    border-right: 4px solid white;
+}
+.bg-dark-subtle {
+    background-color: rgba(0, 0, 0, 0.2) !important;
+}
+.nav-link-admin.small {
+    font-size: 0.85rem;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+[aria-expanded="true"] .fa-chevron-down {
+    transform: rotate(180deg);
+    transition: 0.3s;
+}
 </style>
