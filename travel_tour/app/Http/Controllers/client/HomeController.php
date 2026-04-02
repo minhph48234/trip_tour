@@ -16,15 +16,79 @@ class HomeController extends Controller
     {
         $categories = TourCategory::all();
 
-        // 👉 LẤY TẤT CẢ TOUR - SẮP XẾP THEO BOOKING
         $featuredTours = Tour::with(['category','images','trips'])
             ->withCount('bookings')
             ->orderBy('bookings_count','desc')
-            ->paginate(9); // có phân trang
+            ->paginate(9);
 
         return view('clients.home', compact(
             'featuredTours',
             'categories'
+        ));
+    }
+
+    /* =============================
+       Trang GIỚI THIỆU
+    ============================== */
+    public function about()
+    {
+        return view('clients.about');
+    }
+
+    /* =============================
+       Trang LIÊN HỆ
+    ============================== */
+    public function contact()
+    {
+        return view('clients.contact');
+    }
+
+    /* =============================
+       Trang DỊCH VỤ
+    ============================== */
+    public function service()
+    {
+        return view('clients.service');
+    }
+
+    /* =============================
+       Trang ĐIỂM ĐẾN
+    ============================== */
+    public function destinations()
+    {
+        $categories = TourCategory::all();
+
+        // TOUR NỔI BẬT (nhiều booking)
+        $featuredTours = Tour::with(['category','images','trips'])
+            ->withCount('bookings')
+            ->orderBy('bookings_count','desc')
+            ->take(6)
+            ->get();
+
+        // TOUR MỚI
+        $latestTours = Tour::with(['category','images','trips'])
+            ->latest()
+            ->take(6)
+            ->get();
+
+        // TOUR GIÁ RẺ
+        $cheapTours = Tour::with(['category','images','trips'])
+            ->orderBy('price','asc')
+            ->take(6)
+            ->get();
+
+        // TOUR HOT (nhiều view)
+        $hotTours = Tour::with(['category','images','trips'])
+            ->orderBy('views','desc')
+            ->take(6)
+            ->get();
+
+        return view('clients.destinations', compact(
+            'categories',
+            'featuredTours',
+            'latestTours',
+            'cheapTours',
+            'hotTours'
         ));
     }
 
@@ -105,7 +169,7 @@ class HomeController extends Controller
         }
 
         $tours = $query
-            ->withCount('bookings') // thêm luôn để đồng bộ
+            ->withCount('bookings')
             ->orderBy('bookings_count','desc')
             ->paginate(9);
 
@@ -115,4 +179,6 @@ class HomeController extends Controller
 
         return view('clients.search', compact('tours','categories'));
     }
+
+    
 }
