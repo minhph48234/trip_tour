@@ -63,20 +63,35 @@ Thông tin đặt tour
 <input type="hidden" name="trip_id" value="{{ $trip->id }}">
 <input type="hidden" name="total_price" id="total_price">
 
-{{-- INFO --}}
+{{-- HỌ TÊN --}}
 <div>
-<label>Họ tên</label>
-<input type="text" name="customer_name" required class="w-full border rounded px-3 py-2">
+    <label>Họ tên</label>
+    <input type="text"
+           name="customer_name"
+           required
+           class="w-full border rounded px-3 py-2"
+           value="{{ old('customer_name', auth()->user()->name ?? '') }}">
 </div>
 
+{{-- SĐT --}}
 <div>
 <label>SĐT</label>
-<input type="text" name="customer_phone" required class="w-full border rounded px-3 py-2">
+<input type="text"
+       name="customer_phone"
+       required
+       pattern="^(0|\+84)[0-9]{9}$"
+       title="Số điện thoại phải bắt đầu bằng 0 hoặc +84 và đủ 10 số"
+       class="w-full border rounded px-3 py-2 bg-blue-50"
+       value="{{ old('customer_phone', auth()->user()->phone ?? '') }}">
 </div>
 
+{{-- EMAIL --}}
 <div>
-<label>Email</label>
-<input type="email" name="customer_email" class="w-full border rounded px-3 py-2">
+    <label>Email</label>
+    <input type="email"
+           name="customer_email"
+           class="w-full border rounded px-3 py-2"
+           value="{{ old('customer_email', auth()->user()->email ?? '') }}">
 </div>
 
 {{-- SỐ NGƯỜI --}}
