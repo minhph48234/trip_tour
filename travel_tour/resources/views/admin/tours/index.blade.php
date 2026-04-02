@@ -5,21 +5,54 @@
 @section('content')
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-
     <h4 class="mb-0">Danh sách tour</h4>
 
     <a href="{{ route('admin.tours.create') }}" class="btn btn-primary">
         <i class="fas fa-plus"></i> Thêm tour
     </a>
-
 </div>
+
+{{-- ================= SEARCH ================= --}}
+<form method="GET" action="{{ route('admin.tours.index') }}" class="mb-4">
+    <div class="row">
+
+        <div class="col-md-4">
+            <input type="text"
+                   name="keyword"
+                   value="{{ request('keyword') }}"
+                   class="form-control"
+                   placeholder="Tìm theo tên tour...">
+        </div>
+
+        <div class="col-md-3">
+            <select name="category_id" class="form-control">
+                <option value="">-- Danh mục --</option>
+                @foreach($categories as $cate)
+                    <option value="{{ $cate->id }}"
+                        {{ request('category_id') == $cate->id ? 'selected' : '' }}>
+                        {{ $cate->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <button class="btn btn-primary">Tìm kiếm</button>
+
+            <a href="{{ route('admin.tours.index') }}"
+               class="btn btn-secondary">
+               Reset
+            </a>
+        </div>
+
+    </div>
+</form>
 
 @if(session('success'))
 <div class="alert alert-success">
     {{ session('success') }}
 </div>
 @endif
-
 
 <table class="table table-bordered table-hover align-middle">
 
@@ -57,13 +90,9 @@
                 @endif
             </td>
 
-            <td>
-                <strong>{{ $tour->name }}</strong>
-            </td>
+            <td><strong>{{ $tour->name }}</strong></td>
 
-            <td>
-                {{ $tour->category->name ?? 'Không có' }}
-            </td>
+            <td>{{ $tour->category->name ?? 'Không có' }}</td>
 
             <td>{{ $tour->departure_location }}</td>
 
@@ -71,9 +100,7 @@
 
             <td>{{ $tour->duration }}</td>
 
-            <td>
-                {{ number_format($tour->price,0,',','.') }} VNĐ
-            </td>
+            <td>{{ number_format($tour->price,0,',','.') }} VNĐ</td>
 
             <td>
                 @if($tour->status)
@@ -127,9 +154,8 @@
 
 </table>
 
-
 <div class="mt-3">
-    {{ $tours->links() }}
+    {{ $tours->appends(request()->query())->links() }}
 </div>
 
 @endsection
