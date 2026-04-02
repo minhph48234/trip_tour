@@ -48,7 +48,6 @@ return new class extends Migration
                 'deposit_paid',   // đã cọc
                 'paid',           // đã thanh toán full
                 'completed',      // đi xong
-                'payment_confirmed', // đã xác nhận thanh toán
                 'canceled'
             ])->default('pending');                                                     
 
