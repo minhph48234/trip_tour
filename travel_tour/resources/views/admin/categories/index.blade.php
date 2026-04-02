@@ -25,7 +25,7 @@
                 <i class="fas fa-layer-group me-2 text-primary"></i>Danh sách nhóm tour hiện có
             </h6>
         </div>
-
+        
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light">
@@ -51,15 +51,9 @@
                             <code class="bg-light text-primary px-2 py-1 rounded small">/{{ $item->slug }}</code>
                         </td>
                         <td class="text-center">
-                            @if($item->status == 'active')
                             <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-normal" style="font-size: 0.75rem;">
                                 <i class="fas fa-check-circle me-1"></i> Đang hoạt động
                             </span>
-                            @else
-                            <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill fw-normal" style="font-size: 0.75rem;">
-                                <i class="fas fa-times-circle me-1"></i> Ngừng hoạt động
-                            </span>
-                            @endif
                         </td>
                         <td class="pe-4 text-end">
                             <div class="d-flex justify-content-end gap-2">
@@ -89,16 +83,13 @@
         background-color: #f8fafc !important;
         transition: 0.2s;
     }
-
     /* Màu nền nhẹ cho icon danh mục */
     .bg-primary-subtle {
         background-color: #e0f2fe !important;
     }
-
     .bg-success-subtle {
         background-color: #dcfce7 !important;
     }
-
     /* Chỉnh lại độ bo góc cho table responsive wrapper */
     .table-responsive {
         border-bottom-left-radius: 16px;
