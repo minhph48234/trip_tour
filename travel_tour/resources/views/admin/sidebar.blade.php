@@ -102,6 +102,15 @@
             </span>
     </a>
 
+    <a href="{{ route('admin.attendances.index') }}" 
+        class="nav-link-admin {{ Request::is('admin/groups*') ? 'active' : '' }}">
+        
+        <i class="fa fa-clipboard-list me-3"></i>
+            <span>
+                Quản lý điểm danh
+            </span>
+    </a>
+
 
 
 
