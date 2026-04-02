@@ -17,14 +17,10 @@ use Illuminate\Support\Str;
 
         @php
 
-        // =====================
-        // TOUR
-        // =====================
+        // ================= TOUR =================
         $tour = $booking->trip->tour ?? null;
 
-        // =====================
-        // ẢNH
-        // =====================
+        // ================= ẢNH =================
         $displayUrl = null;
 
         if($tour && $tour->thumbnail){
@@ -43,15 +39,11 @@ use Illuminate\Support\Str;
             $displayUrl = 'https://images.unsplash.com/photo-1503220317375-aaad61436b1b?q=80&w=800';
         }
 
-        // =====================
-        // TIỀN
-        // =====================
+        // ================= TIỀN =================
         $totalPaid = $booking->payments->where('status','paid')->sum('amount');
         $remaining = $booking->total_price - $totalPaid;
 
-        // =====================
-        // TRẠNG THÁI (CHUẨN)
-        // =====================
+        // ================= TRẠNG THÁI =================
         switch($booking->status){
 
             case 'pending':
@@ -62,6 +54,11 @@ use Illuminate\Support\Str;
             case 'deposit_paid':
                 $statusText = 'Đã đặt cọc';
                 $statusClass = 'bg-blue-100 text-blue-700';
+                break;
+
+            case 'payment_confirmed':
+                $statusText = 'Đã xác nhận thanh toán';
+                $statusClass = 'bg-emerald-100 text-emerald-700';
                 break;
 
             case 'paid':
@@ -80,8 +77,6 @@ use Illuminate\Support\Str;
                 break;
 
             default:
-
-                // fallback theo tiền nếu DB sai
                 if($totalPaid <= 0){
                     $statusText = 'Chờ thanh toán';
                     $statusClass = 'bg-yellow-100 text-yellow-700';
@@ -101,7 +96,6 @@ use Illuminate\Support\Str;
         }
 
         @endphp
-
 
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row gap-6 hover:shadow-md transition">
 
@@ -128,7 +122,6 @@ use Illuminate\Support\Str;
                 </div>
 
                 <div class="text-slate-500 text-sm space-y-2">
-
                     <p>
                         Ngày đặt:
                         {{ optional($booking->created_at)->format('d/m/Y') }}
@@ -138,7 +131,6 @@ use Illuminate\Support\Str;
                         Số lượng:
                         {{ $booking->quantity }} khách
                     </p>
-
                 </div>
 
                 {{-- TIỀN --}}
@@ -175,8 +167,8 @@ use Illuminate\Support\Str;
                         Xem chi tiết
                     </a>
 
-                    {{-- NÚT THANH TOÁN TIẾP --}}
-                    @if($booking->status !== 'paid' && $booking->status !== 'completed' && $booking->status !== 'canceled')
+                    {{-- THANH TOÁN --}}
+                    @if(!in_array($booking->status, ['paid','completed','canceled','payment_confirmed']))
 
                         @if($totalPaid < $booking->deposit_amount)
                             <a href="{{ route('payment.vnpay',$booking->id) }}"
