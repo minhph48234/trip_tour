@@ -25,7 +25,7 @@ return new class extends Migration
             // mã phản hồi từ VNPay
             $table->string('vnp_response_code')
                 ->nullable();
-                
+                 
             $table->enum('status',['pending','paid','failed','refunded'])->default('pending');
             
             // payment này là cọc hay thanh toán hết
