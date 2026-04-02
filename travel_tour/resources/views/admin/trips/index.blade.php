@@ -75,8 +75,6 @@
 <td>
     @php
         $statusText = match($trip->status){
-            'finished' => 'Kết thúc',
-            'started' => 'Đang diễn ra',
             'open' => 'Đang mở',
             'full' => 'Đã đầy',
             'closed' => 'Đã đóng',
