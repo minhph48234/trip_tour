@@ -148,7 +148,7 @@ $remaining = $booking->total_price - $totalPaid;
         </span>
     </p>
 
-    <p><b>Thanh toán thêm:</b>
+    <p><b>số tiền đã thanh toán trong hoá lần thanh toán này:</b>
         <span class="text-purple-600 font-semibold">
             {{ number_format($final) }} VNĐ
         </span>

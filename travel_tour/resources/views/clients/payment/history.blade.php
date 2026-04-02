@@ -22,9 +22,10 @@ Lịch sử thanh toán
 <th class="p-3 border">Mã booking</th>
 <th class="p-3 border">Số tiền</th>
 <th class="p-3 border">Phương thức</th>
-<th class="p-3 border">Loaị thanh toán</th>
-<th class="p-3 border">Trạng thái</th>
-<th class="p-3 border">Ngày thanh toán</th>
+<th class="p-3 border">Loại</th>
+<th class="p-3 border">Thanh toán</th>
+<th class="p-3 border">Xác nhận</th> {{-- 🔥 thêm --}}
+<th class="p-3 border">Ngày</th>
 <th class="p-3 border">Chi tiết</th>
 </tr>
 
@@ -39,7 +40,7 @@ Lịch sử thanh toán
 <td class="p-3 border">
 {{ $payment->booking->booking_code }}
 </td>
- 
+
 <td class="p-3 border text-red-600 font-bold">
 {{ number_format($payment->amount) }} VNĐ
 </td>
@@ -49,7 +50,6 @@ Lịch sử thanh toán
 </td>
 
 <td class="p-3 border">
-
 @php
 $typeText = match($payment->type){
     'deposit' => 'Thanh toán cọc',
@@ -58,22 +58,22 @@ $typeText = match($payment->type){
     default => $payment->type
 };
 @endphp
-
 {{ $typeText }}
-
 </td>
 
+{{-- ================= THANH TOÁN ================= --}}
 <td class="p-3 border">
-
 @php
 $statusText = match($payment->status){
     'paid' => 'Đã thanh toán',
+    'pending' => 'Chờ xử lý',
     'failed' => 'Thất bại',
     default => $payment->status
 };
 
 $statusColor = match($payment->status){
     'paid' => 'bg-green-100 text-green-700',
+    'pending' => 'bg-yellow-100 text-yellow-700',
     'failed' => 'bg-red-100 text-red-700',
     default => 'bg-gray-100 text-gray-700'
 };
@@ -82,7 +82,25 @@ $statusColor = match($payment->status){
 <span class="px-3 py-1 rounded-lg font-semibold {{ $statusColor }}">
 {{ $statusText }}
 </span>
+</td>
 
+{{-- ================= ADMIN CONFIRM ================= --}}
+<td class="p-3 border">
+@php
+$adminText = match($payment->admin_confirm_status){
+    'confirmed' => 'Đã xác nhận',
+    default => 'Chờ xác nhận'
+};
+
+$adminColor = match($payment->admin_confirm_status){
+    'confirmed' => 'bg-green-100 text-green-700',
+    default => 'bg-yellow-100 text-yellow-700'
+};
+@endphp
+
+<span class="px-3 py-1 rounded-lg font-semibold {{ $adminColor }}">
+{{ $adminText }}
+</span>
 </td>
 
 <td class="p-3 border">
@@ -92,7 +110,7 @@ $statusColor = match($payment->status){
 <td class="p-3 border">
 
 <a href="{{ route('payment.show', $payment->id) }}"
-class="text-blue-600 hover:underline">
+class="text-blue-600 hover:underline font-semibold">
 
 Xem hoá đơn
 
