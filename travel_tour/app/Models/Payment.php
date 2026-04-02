@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
-    // ❌ KHÔNG dùng timestamps vì bảng chưa có created_at, updated_at
     public $timestamps = false;
 
     protected $fillable = [
@@ -14,13 +13,14 @@ class Payment extends Model
         'method',
         'amount',
         'status',
+        'type',
         'transaction_code',
         'vnp_txn_ref',
         'vnp_response_code',
-        'paid_at'
+        'paid_at',
+        'admin_confirm_status' // ✅ THÊM MỚI
     ];
 
-    // ✅ Ép kiểu dữ liệu (FIX lỗi format())
     protected $casts = [
         'paid_at' => 'datetime',
     ];
@@ -37,27 +37,65 @@ class Payment extends Model
 
     /*
     =================================
-    ACCESSOR (hiển thị đẹp)
+    ACCESSOR
     =================================
     */
 
-    // Trạng thái tiếng Việt
+    // trạng thái thanh toán
     public function getStatusTextAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
+            'pending' => 'Chờ thanh toán',
             'paid' => 'Đã thanh toán',
             'failed' => 'Thất bại',
+            'refunded' => 'Hoàn tiền',
             default => $this->status
         };
     }
 
-    // Màu trạng thái (dùng cho CSS)
     public function getStatusColorAttribute()
     {
-        return match($this->status) {
-            'paid' => 'green',
-            'failed' => 'red',
-            default => 'gray'
+        return match ($this->status) {
+            'pending' => 'warning',
+            'paid' => 'success',
+            'failed' => 'danger',
+            'refunded' => 'secondary',
+            default => 'secondary'
+        };
+    }
+
+    // loại thanh toán
+    public function getTypeTextAttribute()
+    {
+        return match ($this->type) {
+            'deposit' => 'Thanh toán cọc',
+            'final' => 'Thanh toán còn lại',
+            'extra' => 'Phát sinh',
+            default => $this->type
+        };
+    }
+
+    /*
+    =================================
+    ADMIN CONFIRM STATUS (🔥 MỚI)
+    =================================
+    */
+
+    public function getAdminConfirmTextAttribute()
+    {
+        return match ($this->admin_confirm_status) {
+            'pending' => 'Chờ admin xác nhận',
+            'confirmed' => 'Đã xác nhận',
+            default => 'Chưa xác định'
+        };
+    }
+
+    public function getAdminConfirmColorAttribute()
+    {
+        return match ($this->admin_confirm_status) {
+            'pending' => 'warning',
+            'confirmed' => 'success',
+            default => 'secondary'
         };
     }
 }

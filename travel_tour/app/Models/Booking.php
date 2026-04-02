@@ -18,8 +18,16 @@ class Booking extends Model
         'quantity',
         'total_price',
         'note',
+        'deposit_amount',
+        'paid_amount',
         'status'
     ];
+
+    /*
+    =================================
+    RELATIONSHIP
+    =================================
+    */
 
     public function user()
     {
@@ -48,23 +56,67 @@ class Booking extends Model
 
     public function payments()
     {
-        return $this->hasMany(\App\Models\Payment::class);
+        return $this->hasMany(Payment::class);
     }
 
+    /*
+    =================================
+    UPDATE STATUS (QUAN TRỌNG)
+    =================================
+    */
     public function updateStatus()
     {
-        $paid = $this->paid_amount ?? 0;
-        $deposit = $this->deposit_amount ?? 0;
-        $total = $this->total_price ?? 0;
+        // Tổng tiền đã thanh toán từ bảng payments
+        $paid = $this->payments()
+            ->where('status', 'paid')
+            ->sum('amount');
+
+        $total = $this->total_price;
+        $deposit = $this->deposit_amount;
+
+        // cập nhật lại paid_amount
+        $this->paid_amount = $paid;
 
         if ($paid >= $total) {
             $this->status = 'paid';
-        } elseif ($paid > $deposit) {
+        } elseif ($paid >= $deposit && $deposit > 0) {
             $this->status = 'deposit_paid';
         } else {
             $this->status = 'pending';
         }
 
         $this->save();
+    }
+
+    /*
+    =================================
+    ACCESSOR
+    =================================
+    */
+
+    public function getStatusTextAttribute()
+    {
+        return match ($this->status) {
+            'pending' => 'Chờ xử lý',
+            'deposit_paid' => 'Đã đặt cọc',
+            'payment_confirmed' => 'Đã xác nhận thanh toán',
+            'paid' => 'Đã thanh toán',
+            'completed' => 'Hoàn thành',
+            'canceled' => 'Đã hủy',
+            default => $this->status
+        };
+    }
+
+    public function getStatusColorAttribute()
+    {
+        return match ($this->status) {
+            'pending' => 'gray',
+            'deposit_paid' => 'yellow',
+            'payment_confirmed' => 'blue',
+            'paid' => 'green',
+            'completed' => 'emerald',
+            'canceled' => 'red',
+            default => 'gray'
+        };
     }
 }
