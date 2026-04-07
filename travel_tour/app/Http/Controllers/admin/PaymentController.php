@@ -14,16 +14,40 @@ class PaymentController extends Controller
     DANH SÁCH THANH TOÁN
     =================================
     */
-    public function index()
+    public function index(Request $request)
     {
-        $payments = Payment::with([
-            'booking.user',
-            'booking.tour',
-            'booking.trip'
-        ])
-        ->orderByDesc('id')
-        ->paginate(10);
-
+        $query = Payment::with(['booking.tour']);
+    
+        // 🔍 SEARCH (customer + tour)
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+    
+            $query->where(function ($q) use ($keyword) {
+                $q->whereHas('booking', function ($q2) use ($keyword) {
+                    $q2->where('customer_name', 'like', "%$keyword%");
+                })
+                ->orWhereHas('booking.tour', function ($q2) use ($keyword) {
+                    $q2->where('name', 'like', "%$keyword%");
+                });
+            });
+        }
+    
+        // 🎯 FILTER STATUS (ENUM chuẩn DB)
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+    
+        // 💳 FILTER METHOD (ENUM)
+        if ($request->filled('method')) {
+            $query->where('method', $request->method);
+        }
+    
+        // 🚀 PAGINATE + giữ query
+        $payments = $query
+    ->orderByDesc('paid_at')
+    ->paginate(10)
+    ->withQueryString();
+    
         return view('admin.payments.index', compact('payments'));
     }
 
