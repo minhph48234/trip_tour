@@ -159,7 +159,10 @@ class TourController extends Controller
     public function destroy($id)
     {
         $tour = Tour::findOrFail($id);
-
+          // ❌ Nếu có trip → không cho xoá
+    if ($tour->trips()->exists()) {
+        return back()->with('error', 'Không thể xoá vì tour đã có lịch khởi hành');
+    }
         $tour->delete();
 
         return redirect()
