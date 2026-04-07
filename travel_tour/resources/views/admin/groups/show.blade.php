@@ -4,85 +4,121 @@
 
 @section('content')
 
-<h3>Thông tin đoàn</h3>
+<div class="container">
 
-<p><b>Tour:</b> {{ $group->trip->tour->name }}</p>
-<p><b>Ngày:</b> {{ \Carbon\Carbon::parse($group->trip->start_date)->format('d/m/Y') }}</p>
+    <h3 class="mb-3">Thông tin đoàn</h3>
 
-<p><b>Guide hiện tại:</b> 
-@if($group->guide)
-    {{ $group->guide->name }}
-@else
-    Chưa có
-@endif
-</p>
+    <p><b>Tour:</b> {{ $group->trip->tour->name }}</p>
 
-<hr>
+    <p><b>Ngày:</b> 
+        {{ $group->trip->start_date->format('d/m/Y') }} 
+        - 
+        {{ $group->trip->end_date->format('d/m/Y') }}
+    </p>
 
-<h4>Phân công guide</h4>
+    <p><b>Guide hiện tại:</b> 
+        @if($group->guide)
+            <span class="badge bg-success">{{ $group->guide->name }}</span>
+        @else
+            <span class="badge bg-secondary">Chưa có</span>
+        @endif
+    </p>
 
-@if(session('error'))
-<div class="alert alert-danger">{{ session('error') }}</div>
-@endif
+    <hr>
 
-@if(session('success'))
-<div class="alert alert-success">{{ session('success') }}</div>
-@endif
+    {{-- ================= ALERT ================= --}}
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
 
-<form action="{{ route('admin.groups.assignGuide',$group->id) }}" method="POST">
-@csrf
-@method('PUT')
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
-<select name="guide_id" class="form-control mb-2">
+    {{-- ================= ASSIGN GUIDE ================= --}}
+    <h4 class="mb-3">Phân công hướng dẫn viên</h4>
 
-@foreach($guides as $guide)
+    <form action="{{ route('admin.groups.assignGuide',$group->id) }}" method="POST">
+        @csrf
+        @method('PUT')
 
-<option value="{{ $guide->id }}">
+        <div class="mb-3">
+            <select name="guide_id" class="form-control">
 
-{{ $guide->name }} 
+                <option value="">-- Chọn hướng dẫn viên --</option>
 
-(
-@if($guide->status == 'available')
-    Sẵn sàng
-@elseif($guide->status == 'busy')
-    Đang bận
-@else
-    Ngừng hoạt động
-@endif
-)
+                @foreach($guides as $guide)
 
-</option>
+                    @php
+                        $isSelected = $group->guide_id == $guide->id;
 
-@endforeach
+                        // 🔥 CHECK TRÙNG LỊCH CHUẨN
+                        $isBusy = \App\Models\Group::where('guide_id', $guide->id)
+                            ->where('id', '!=', $group->id)
+                            ->whereHas('trip', function ($q) use ($group) {
+                                $q->where(function ($query) use ($group) {
+                                    $query->where('start_date', '<=', $group->trip->end_date)
+                                          ->where('end_date', '>=', $group->trip->start_date);
+                                });
+                            })
+                            ->exists();
+                    @endphp
 
-</select>
+                    <option value="{{ $guide->id }}"
+                        {{ $isSelected ? 'selected' : '' }}
+                        {{ ($guide->status == 'inactive' || $isBusy) ? 'disabled' : '' }}
+                    >
+                        {{ $guide->name }}
 
-<button class="btn btn-primary">Phân công</button>
+                        (
+                        @if($guide->status == 'inactive')
+                            ❌ Ngừng hoạt động
+                        @elseif($isBusy)
+                            🔴 Trùng lịch
+                        @else
+                            🟢 Sẵn sàng
+                        @endif
+                        )
+                    </option>
 
-</form>
+                @endforeach
 
-<hr>
+            </select>
+        </div>
 
-<h4>Danh sách booking</h4>
+        <button class="btn btn-primary">Phân công</button>
+    </form>
 
-<table class="table table-bordered">
+    <hr>
 
-<tr>
-<th>Mã</th>
-<th>Khách</th>
-<th>Số người</th>
-</tr>
+    {{-- ================= BOOKING LIST ================= --}}
+    <h4 class="mb-3">Danh sách booking</h4>
 
-@foreach($group->bookings as $booking)
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Mã</th>
+                <th>Khách</th>
+                <th>Số người</th>
+            </tr>
+        </thead>
+        <tbody>
 
-<tr>
-<td>{{ $booking->booking_code }}</td>
-<td>{{ $booking->customer_name }}</td>
-<td>{{ $booking->quantity }}</td>
-</tr>
+        @forelse($group->bookings as $booking)
+            <tr>
+                <td>{{ $booking->booking_code }}</td>
+                <td>{{ $booking->customer_name }}</td>
+                <td>{{ $booking->quantity }}</td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="3" class="text-center">Chưa có booking</td>
+            </tr>
+        @endforelse
 
-@endforeach
+        </tbody>
+    </table>
 
-</table>
+</div>
 
 @endsection

@@ -78,76 +78,61 @@ class GroupController extends Controller
     |--------------------------------------------------------------------------
     */
 
-   public function assignGuide(Request $request, $id)
-{
-    $request->validate([
-        'guide_id' => 'required|exists:tour_guides,id'
-    ]);
+    public function assignGuide(Request $request, $id)
+    {
+        $request->validate([
+            'guide_id' => 'required|exists:tour_guides,id'
+        ]);
 
-    $group = Group::with('trip')->findOrFail($id);
+        $group = Group::with('trip')->findOrFail($id);
+        $guide = TourGuide::findOrFail($request->guide_id);
 
-    $guide = TourGuide::findOrFail($request->guide_id);
+        $tripStart = $group->trip->start_date;
+        $tripEnd   = $group->trip->end_date;
 
-    $tripStart = $group->trip->start_date;
-    $tripEnd   = $group->trip->end_date;
+        /*
+        |--------------------------------------------------
+        | 1. CHECK GUIDE STATUS
+        |--------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------
-    | 1. CHECK STATUS GUIDE
-    |--------------------------------------------------
-    */
+        if ($guide->status == 'inactive') {
+            return back()->with('error', 'Hướng dẫn viên đã bị khóa');
+        }
 
-    if ($guide->status == 'inactive') {
-        return back()->with('error', 'Hướng dẫn viên đã bị khóa');
+        /*
+        |--------------------------------------------------
+        | 2. CHECK TRÙNG LỊCH CHUẨN 100%
+        |--------------------------------------------------
+        */
+
+        $isOverlap = Group::where('guide_id', $guide->id)
+            ->where('id', '!=', $group->id) // tránh check chính nó
+            ->whereHas('trip', function ($q) use ($tripStart, $tripEnd) {
+                $q->where(function ($query) use ($tripStart, $tripEnd) {
+
+                    $query->where('start_date', '<=', $tripEnd)
+                        ->where('end_date', '>=', $tripStart);
+                });
+            })
+            ->exists();
+
+        if ($isOverlap) {
+            return back()->with('error', 'Hướng dẫn viên bị trùng lịch / trùng ngày');
+        }
+
+        /*
+        |--------------------------------------------------
+        | 3. ASSIGN GUIDE
+        |--------------------------------------------------
+        */
+
+        $group->update([
+            'guide_id' => $guide->id
+        ]);
+
+        return back()->with('success', 'Phân công thành công');
     }
-
-    if ($guide->status == 'busy') {
-        return back()->with('error', 'Hướng dẫn viên đang bận');
-    }
-
-    /*
-    |--------------------------------------------------
-    | 2. CHECK TRÙNG LỊCH (NÂNG CAO - REAL PROJECT)
-    |--------------------------------------------------
-    */
-
-    $exists = Group::where('guide_id', $guide->id)
-        ->whereHas('trip', function ($q) use ($tripStart, $tripEnd) {
-            $q->where(function ($query) use ($tripStart, $tripEnd) {
-
-                // trùng khoảng thời gian
-                $query->whereBetween('start_date', [$tripStart, $tripEnd])
-                      ->orWhereBetween('end_date', [$tripStart, $tripEnd]);
-            });
-        })
-        ->exists();
-
-    if ($exists) {
-        return back()->with('error', 'Hướng dẫn viên bị trùng lịch');
-    }
-
-    /*
-    |--------------------------------------------------
-    | 3. ASSIGN GUIDE
-    |--------------------------------------------------
-    */
-
-    $group->update([
-        'guide_id' => $guide->id
-    ]);
-
-    /*
-    |--------------------------------------------------
-    | 4. UPDATE STATUS GUIDE -> BUSY
-    |--------------------------------------------------
-    */
-
-    $guide->update([
-        'status' => 'busy'
-    ]);
-
-    return back()->with('success', 'Phân công thành công');
-}
 
 
 
