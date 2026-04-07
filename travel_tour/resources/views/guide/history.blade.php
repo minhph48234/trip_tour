@@ -1,82 +1,150 @@
 @extends('guide.layouts.layout')
 
-@section('content_title', 'Lịch sử tour đã dẫn')
+@section('title','Lịch sử tour')
 
 @section('content')
 
-<div class="bg-white shadow-xl rounded-2xl p-6">
+<div class="container mt-4">
 
-    <h2 class="text-2xl font-bold mb-6">
-        Lịch sử tour đã dẫn
-    </h2>
+    <div class="card shadow border-0 rounded-4">
 
-    @if($groups->count())
+        {{-- HEADER --}}
+        <div class="card-header bg-dark text-white rounded-top-4 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">📚 Lịch sử tour đã dẫn</h5>
 
-    <div class="overflow-x-auto">
+            <span class="badge bg-light text-dark">
+                {{ $groups->count() }} tour
+            </span>
+        </div>
 
-        <table class="w-full text-center border rounded-xl overflow-hidden">
+        <div class="card-body">
 
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="p-3 border">#</th>
-                    <th class="p-3 border">Tên tour</th>
-                    <th class="p-3 border">Ngày đi</th>
-                    <th class="p-3 border">Ngày về</th>
-                    <th class="p-3 border">Số khách</th>
-                    <th class="p-3 border">Trạng thái</th>
-                </tr>
-            </thead>
+            @if($groups->count())
 
-            <tbody>
+            <div class="table-responsive">
 
-                @foreach($groups as $index => $group)
+                <table class="table table-hover align-middle mb-0">
 
-                <tr class="hover:bg-gray-50 transition">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Tên tour</th>
+                            <th>Ngày đi</th>
+                            <th>Ngày về</th>
+                            <th>Khách</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
 
-                    <td class="p-3 border">
-                        {{ $index + 1 }}
-                    </td>
+                    <tbody>
 
-                    <td class="p-3 border font-semibold text-left">
-                        {{ $group->trip->tour->name ?? '---' }}
-                    </td>
+                        @foreach($groups as $index => $group)
 
-                    <td class="p-3 border">
-                        {{ $group->trip->start_date ?? '---' }}
-                    </td>
+                        <tr class="hover-row">
 
-                    <td class="p-3 border">
-                        {{ $group->trip->end_date ?? '---' }}
-                    </td>
+                            <td>{{ $index + 1 }}</td>
 
-                    <td class="p-3 border">
-                        {{ $group->current_people }} / {{ $group->max_people }}
-                    </td>
+                            <td class="fw-semibold text-start">
+                                {{ $group->trip->tour->name ?? '---' }}
+                            </td>
 
-                    <td class="p-3 border">
-                        <span class="px-3 py-1 rounded-lg text-sm font-semibold bg-green-100 text-green-700">
-                            Hoàn thành
-                        </span>
-                    </td>
+                            <td>
+                                <span class="text-muted">
+                                    {{ $group->trip->start_date ?? '---' }}
+                                </span>
+                            </td>
 
-                </tr>
+                            <td>
+                                <span class="text-muted">
+                                    {{ $group->trip->end_date ?? '---' }}
+                                </span>
+                            </td>
 
-                @endforeach
+                            <td>
+                                <span class="badge bg-light text-dark">
+                                    {{ $group->current_people }} / {{ $group->max_people }}
+                                </span>
+                            </td>
 
-            </tbody>
+                            <td>
+                                <span class="badge status-done">
+                                    ✔ Hoàn thành
+                                </span>
+                            </td>
 
-        </table>
+                        </tr>
+
+                        @endforeach
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            @else
+
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1"></i>
+                <p class="mt-2">Chưa có tour nào đã hoàn thành</p>
+            </div>
+
+            @endif
+
+        </div>
 
     </div>
-
-    @else
-
-    <div class="text-center py-10 text-gray-500">
-        Chưa có tour nào đã hoàn thành.
-    </div>
-
-    @endif
 
 </div>
+
+{{-- CSS --}}
+<style>
+
+/* CARD */
+.card {
+    border-radius: 16px;
+    transition: 0.3s;
+}
+.card:hover {
+    transform: translateY(-3px);
+}
+
+/* TABLE */
+.table {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* HOVER ROW */
+.hover-row:hover {
+    background-color: #f8f9fa;
+}
+
+/* BADGE */
+.status-done {
+    background: #e6f9f0;
+    color: #16a34a;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* HEADER */
+.card-header {
+    font-size: 16px;
+}
+
+/* EMPTY ICON */
+.bi-inbox {
+    color: #ccc;
+}
+
+/* TEXT */
+.text-muted {
+    font-size: 14px;
+}
+
+</style>
 
 @endsection
