@@ -60,9 +60,39 @@
             {{-- ================= TOUR LIST ================= --}}
             <div class="col-span-12 lg:col-span-9">
 
-                <h2 class="text-2xl font-bold mb-6">
-                    Danh sách tour nổi bật
-                </h2>
+                <div class="flex items-center justify-between mb-6">
+<h2 class="text-2xl font-bold">
+    Danh sách tour
+</h2>
+
+<div class="flex gap-2 mb-6">
+
+    {{-- TẤT CẢ --}}
+    <a href="{{ route('home', ['filter' => 'all']) }}"
+        class="px-4 py-2 rounded-lg
+        {{ $filter == 'all' ? 'bg-gray-800 text-white' : 'bg-gray-200' }}">
+        Tất cả
+    </a>
+
+    {{-- NỔI BẬT --}}
+     <a href="{{ route('home', ['filter' => 'hot']) }}"
+           class="px-4 py-2 rounded-lg
+           {{ $filter == 'hot' ? 'bg-red-500 text-white' : 'bg-gray-200' }}">
+            Nổi Bật
+        </a>
+
+    {{-- GIÁ RẺ --}}
+    <a href="{{ route('home', ['filter' => 'cheap']) }}"
+        class="px-4 py-2 rounded-lg
+        {{ $filter == 'cheap' ? 'bg-green-600 text-white' : 'bg-gray-200' }}">
+        Giá rẻ
+    </a>
+
+</div>
+
+
+</div>
+
 
                 <div class="space-y-6">
 

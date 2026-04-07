@@ -12,20 +12,44 @@ class HomeController extends Controller
     /* =============================
        Trang chủ (CHỈ TOUR NỔI BẬT)
     ============================== */
-    public function index()
-    {
-        $categories = TourCategory::all();
+   public function index(Request $request)
+{
+    $categories = TourCategory::all();
 
-        $featuredTours = Tour::with(['category', 'images', 'trips'])
-            ->withCount('bookings')
-            ->orderBy('bookings_count', 'desc')
-            ->paginate(9);
+    // filter mặc định
+    $filter = $request->input('filter', 'all');
 
-        return view('clients.home', compact(
-            'featuredTours',
-            'categories'
-        ));
+    $query = Tour::with(['category', 'images', 'trips'])
+        ->withCount('bookings');
+
+    switch ($filter) {
+
+        // ⭐ TẤT CẢ TOUR
+        case 'all':
+            $query->latest(); // mới nhất
+            break;
+
+        // ⭐ TOUR GIÁ RẺ
+        case 'cheap':
+            $query->orderBy('price', 'asc');
+            break;
+
+        // ⭐ TOUR NỔI BẬT
+         case 'hot':
+                $query->where('views', '>', 0)
+                    ->orderBy('views', 'desc');
+                break;
     }
+
+    $featuredTours = $query->paginate(9)->withQueryString();
+
+    return view('clients.home', compact(
+        'featuredTours',
+        'categories',
+        'filter'
+    ));
+}
+
 
     /* =============================
        Trang GIỚI THIỆU
