@@ -42,9 +42,7 @@ class DashboardController extends Controller
         } elseif (Schema::hasColumn('payments', 'payment_date')) {
             $dateColumn = 'payment_date';
         }
-
         $today = Carbon::today();
-
         /*
         =========================
         DOANH THU (FIX CHUẨN)
@@ -69,7 +67,6 @@ class DashboardController extends Controller
             $revenueYear = Payment::where('status', 'paid')
                 ->whereYear($dateColumn, $today->year)
                 ->sum('amount');
-
         } else {
             // fallback
             $revenueToday = 0;
@@ -94,11 +91,11 @@ class DashboardController extends Controller
         */
 
         $pendingFullBookings = Booking::withSum(
-                ['payments as total_paid' => function ($q) {
-                    $q->where('status', 'paid');
-                }],
-                'amount'
-            )
+            ['payments as total_paid' => function ($q) {
+                $q->where('status', 'paid');
+            }],
+            'amount'
+        )
             ->get()
             ->filter(function ($booking) {
                 return ($booking->total_paid ?? 0) < $booking->total_price;
@@ -134,15 +131,15 @@ class DashboardController extends Controller
             ->get();
 
         // doanh thu cao nhất
-        $topToursByRevenue = Tour::select(
-                'tours.*',
-                DB::raw('SUM(payments.amount) as total_revenue')
-            )
-            ->join('trips', 'trips.tour_id', '=', 'tours.id')
-            ->join('bookings', 'bookings.trip_id', '=', 'trips.id')
-            ->join('payments', 'payments.booking_id', '=', 'bookings.id')
-            ->where('payments.status', 'paid')
-            ->groupBy('tours.id')
+        $topToursByRevenue = Tour::select('tours.*')
+            ->selectSub(function ($query) {
+                $query->from('payments')
+                    ->join('bookings', 'payments.booking_id', '=', 'bookings.id')
+                    ->join('trips', 'bookings.trip_id', '=', 'trips.id')
+                    ->whereColumn('trips.tour_id', 'tours.id')
+                    ->where('payments.status', 'paid')
+                    ->selectRaw('SUM(payments.amount)');
+            }, 'total_revenue')
             ->orderByDesc('total_revenue')
             ->limit(5)
             ->get();

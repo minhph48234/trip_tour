@@ -4,28 +4,25 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
 use App\Models\Booking;
 
 class BookingController extends Controller
 {
-
     /*
     |--------------------------------------------------------------------------
     | DANH SÁCH BOOKING
     |--------------------------------------------------------------------------
     */
-
     public function index(Request $request)
     {
-
         $keyword = $request->keyword;
 
         $bookings = Booking::with([
                 'tour',
                 'trip',
                 'group',
-                'user'
+                'user',
+                'payments' // 🔥 thêm
             ])
             ->when($keyword, function ($query) use ($keyword) {
                 $query->where('customer_name', 'like', "%$keyword%")
@@ -35,51 +32,40 @@ class BookingController extends Controller
             ->paginate(10);
 
         return view('admin.bookings.index', compact('bookings'));
-
     }
-
-
 
     /*
     |--------------------------------------------------------------------------
     | CHI TIẾT BOOKING
     |--------------------------------------------------------------------------
     */
-
     public function show($id)
     {
-
         $booking = Booking::with([
             'tour',
             'trip',
             'group',
             'customers',
-            'user'
+            'user',
+            'payments' // 🔥 thêm
         ])->findOrFail($id);
 
-        return view('admin.bookings.show',compact('booking'));
-
+        return view('admin.bookings.show', compact('booking'));
     }
-
-
 
     /*
     |--------------------------------------------------------------------------
     | CẬP NHẬT TRẠNG THÁI BOOKING
     |--------------------------------------------------------------------------
     */
-
-    public function updateStatus(Request $request,$id)
+    public function updateStatus(Request $request, $id)
     {
-
         $booking = Booking::findOrFail($id);
 
         $booking->update([
-            'status'=>$request->status
+            'status' => $request->status
         ]);
 
-        return back()->with('success','Cập nhật trạng thái thành công');
-
+        return back()->with('success', 'Cập nhật trạng thái thành công');
     }
-
 }

@@ -1,60 +1,143 @@
 @extends('admin.layouts.layout')
 
-@section('content_title', 'Quản lý đoàn khởi hành')
+@section('content_title','Quản lý đoàn du lịch')
 
 @section('content')
 
-<h2>Danh sách đoàn</h2>
+<div class="card shadow-sm border-0">
 
-<table border="1" class="table table-bordered table-hover align-middle">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Danh sách đoàn</h5>
+    </div>
 
-<tr>
+    <div class="card-body">
 
-<th>ID</th>
-<th>Tour</th>
-<th>Ngày khởi hành</th>
-<th>Số người</th>
-<th>Guide</th>
-<th>Action</th>
+        {{-- ================= SEARCH ================= --}}
+        <form method="GET" class="row mb-4">
 
-</tr>
+            <div class="col-md-4">
+                <input type="text"
+                       name="keyword"
+                       value="{{ request('keyword') }}"
+                       class="form-control"
+                       placeholder="Tìm theo tên tour...">
+            </div>
 
-@foreach($groups as $group)
+            <div class="col-md-3">
+                <input type="date"
+                       name="start_date"
+                       value="{{ request('start_date') }}"
+                       class="form-control">
+            </div>
 
-<tr>
+            <div class="col-md-3">
+                <button class="btn btn-primary">
+                    <i class="fas fa-search"></i> Tìm kiếm
+                </button>
 
-<td>{{ $group->id }}</td>
+                <a href="{{ route('admin.groups.index') }}"
+                   class="btn btn-secondary">
+                    Reset
+                </a>
+            </div>
 
-<td>{{ $group->trip->tour->name }}</td>
+        </form>
 
-<td>{{ $group->trip->start_date }}</td>
 
-<td>
+        {{-- ================= TABLE ================= --}}
+        <div class="table-responsive">
 
-{{ $group->current_people }}/{{ $group->max_people }}
+            <table class="table table-bordered table-hover align-middle">
 
-</td>
+                <thead class="table-light text-center">
+                    <tr>
+                        <th width="60">ID</th>
+                        <th>Tour</th>
+                        <th>Ngày đi</th>
+                        <th>Ngày về</th>
+                        <th>Số khách</th>
+                        <th>Hướng dẫn viên</th>
+                        <th width="120">Hành động</th>
+                    </tr>
+                </thead>
 
-<td>
+                <tbody>
 
-{{ $group->guide->name ?? 'Chưa phân công' }}
+                    @forelse($groups as $group)
 
-</td>
+                    <tr>
 
-<td>
+                        {{-- ID --}}
+                        <td class="text-center">{{ $group->id }}</td>
 
-<a class="btn btn-primary" href="{{ route('admin.groups.show',$group->id) }}">
-Chi tiết
-</a>
+                        {{-- TOUR --}}
+                        <td>
+                            <strong>
+                                {{ $group->trip->tour->name ?? 'N/A' }}
+                            </strong>
+                        </td>
 
-</td>
+                        {{-- NGÀY ĐI --}}
+                        <td class="text-center">
+                            {{ $group->trip->start_date->format('d/m/Y') }}
+                        </td>
 
-</tr>
+                        {{-- NGÀY VỀ --}}
+                        <td class="text-center">
+                            {{ $group->trip->end_date->format('d/m/Y') }}
+                        </td>
 
-@endforeach
+                        {{-- SỐ KHÁCH --}}
+                        <td class="text-center">
+                            <span class="badge bg-info">
+                                {{ $group->current_people }}/{{ $group->max_people }}
+                            </span>
+                        </td>
 
-</table>
+                        {{-- GUIDE --}}
+                        <td class="text-center">
+                            @if($group->guide)
+                                {{ $group->guide->name }}
+                            @else
+                                <span class="text-muted">Chưa phân công</span>
+                            @endif
+                        </td>
 
-{{ $groups->links() }}
+                        {{-- ACTION --}}
+                        <td class="text-center">
+
+                            <a href="{{ route('admin.groups.show',$group->id) }}"
+                               class="btn btn-info btn-sm">
+                                <i class="fas fa-eye"></i>
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    @empty
+
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">
+                            Không có dữ liệu
+                        </td>
+                    </tr>
+
+                    @endforelse
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {{-- PAGINATION --}}
+        <div class="mt-3">
+            {{ $groups->appends(request()->query())->links() }}
+        </div>
+
+    </div>
+
+</div>
 
 @endsection

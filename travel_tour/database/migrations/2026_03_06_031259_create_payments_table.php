@@ -1,7 +1,9 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+
 return new class extends Migration
 {
     public function up(): void
@@ -14,20 +16,27 @@ return new class extends Migration
                 ->constrained('bookings')
                 ->cascadeOnDelete();
 
-            $table->enum('method',['cash','vnpay','momo']);
- 
-            $table->decimal('amount',12,2);
+            $table->enum('method', ['cash','vnpay','momo']);
 
-             // mã đơn hàng gửi sang VNPay
-            $table->string('vnp_txn_ref')
-                ->nullable();
+            $table->decimal('amount', 12, 2);
+
+            // mã đơn hàng gửi sang VNPay
+            $table->string('vnp_txn_ref')->nullable();
 
             // mã phản hồi từ VNPay
-            $table->string('vnp_response_code')
-                ->nullable();
-                
-            $table->enum('status',['pending','paid','failed','refunded'])->default('pending');
-            
+            $table->string('vnp_response_code')->nullable();
+
+            // trạng thái thanh toán
+            $table->enum('status', ['pending','paid','failed','refunded'])
+                ->default('pending');
+
+            // 🔥 TRẠNG THÁI XÁC NHẬN ADMIN
+            $table->enum('admin_confirm', ['pending','confirmed'])
+                ->default('pending');
+
+            // 🔥 THỜI GIAN ADMIN XÁC NHẬN (PRO)
+            $table->timestamp('confirmed_at')->nullable();
+
             // payment này là cọc hay thanh toán hết
             $table->enum('type', ['deposit','final','extra']);
 

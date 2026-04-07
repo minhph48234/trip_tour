@@ -61,7 +61,14 @@ switch ($booking->status) {
 }
 
 /* ======================
-   TÍNH TIỀN THANH TOÁN
+   🔥 TRẠNG THÁI ADMIN (SỬA CHUẨN)
+====================== */
+$isConfirmed = $booking->payments
+    ->where('admin_confirm_status','confirmed')
+    ->count() > 0;
+
+/* ======================
+   TÍNH TIỀN
 ====================== */
 
 $totalPaid = $booking->payments->where('status','paid')->sum('amount');
@@ -88,84 +95,113 @@ $remaining = $booking->total_price - $totalPaid;
 
 {{-- ẢNH TOUR --}}
 <div class="mb-8">
-<img src="{{ $displayUrl }}"
-class="w-full h-[420px] object-cover rounded-2xl shadow-lg"
-alt="{{ $tour->name }}">
+    <img src="{{ $displayUrl }}"
+         class="w-full h-[420px] object-cover rounded-2xl shadow-lg"
+         alt="{{ $tour->name }}">
 </div>
 
 {{-- TÊN TOUR --}}
 <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-8">
 
-<h1 class="text-3xl font-bold text-slate-800">
-{{ $tour->name }}
-</h1>
+    <h1 class="text-3xl font-bold text-slate-800">
+        {{ $tour->name }}
+    </h1>
 
-<div class="text-3xl font-black text-red-600 mt-4 md:mt-0">
-{{ number_format($tour->price) }} VNĐ
-</div>
+    <div class="text-3xl font-black text-red-600 mt-4 md:mt-0">
+        {{ number_format($tour->price) }} VNĐ
+    </div>
 
 </div>
 
 {{-- THÔNG TIN BOOKING --}}
 <div class="bg-white shadow-lg rounded-2xl p-6 mb-10">
 
-<h2 class="text-xl font-bold mb-4">Thông tin đặt tour</h2>
+    <h2 class="text-xl font-bold mb-4">Thông tin đặt tour</h2>
 
-<p><b>Mã booking:</b> {{ $booking->booking_code }}</p>
+    <p><b>Mã booking:</b> {{ $booking->booking_code }}</p>
 
-<p><b>Ngày khởi hành:</b>
-{{ \Carbon\Carbon::parse($booking->trip->start_date)->format('d/m/Y') }}
-</p>
+    <p><b>Ngày khởi hành:</b>
+        {{ \Carbon\Carbon::parse($booking->trip->start_date)->format('d/m/Y') }}
+    </p>
 
-<p><b>Ngày kết thúc:</b>
-{{ \Carbon\Carbon::parse($booking->trip->end_date)->format('d/m/Y') }}
-</p>
+    <p><b>Ngày kết thúc:</b>
+        {{ \Carbon\Carbon::parse($booking->trip->end_date)->format('d/m/Y') }}
+    </p>
 
-<p><b>Tổng tiền:</b>
-<span class="text-red-600 font-bold">
-{{ number_format($booking->total_price) }} VNĐ
-</span>
-</p>
+    <hr class="my-3">
 
-<p><b>Đã thanh toán:</b>
-<span class="text-green-600 font-bold">
-{{ number_format($totalPaid) }} VNĐ
-</span>
-</p>
+    <p><b>Tổng tiền:</b>
+        <span class="text-red-600 font-bold">
+            {{ number_format($booking->total_price) }} VNĐ
+        </span>
+    </p>
 
-<p><b>Đặt cọc:</b>
-<span class="text-blue-600 font-semibold">
-{{ number_format($totalPaid) }} VNĐ
-</span>
-</p>
+    <p><b>Đã thanh toán:</b>
+        <span class="text-green-600 font-bold">
+            {{ number_format($totalPaid) }} VNĐ
+        </span>
+    </p>
 
-<p><b>Thanh toán thêm:</b>
-<span class="text-purple-600 font-semibold">
-{{ number_format($final) }} VNĐ
-</span>
-</p>
+    <p><b>Tiền cọc:</b>
+        <span class="text-blue-600 font-semibold">
+            {{ number_format($deposit) }} VNĐ
+        </span>
+    </p>
 
-<p><b>Còn lại:</b>
-<span class="text-orange-600 font-bold">
-{{ number_format($remaining) }} VNĐ
-</span>
-</p>
+    <p><b>số tiền đã thanh toán trong hoá lần thanh toán này:</b>
+        <span class="text-purple-600 font-semibold">
+            {{ number_format($final) }} VNĐ
+        </span>
+    </p>
 
-<p><b>Trạng thái:</b>
-<span class="px-3 py-1 rounded-lg font-semibold {{ $statusColor }}">
-{{ $statusText }}
-</span>
-</p>
+    <p><b>Còn lại:</b>
+        <span class="text-orange-600 font-bold">
+            {{ number_format($remaining) }} VNĐ
+        </span>
+    </p>
 
-@if($booking->status == 'deposit_paid' && $booking->paid_amount < $booking->total_price)
+    <hr class="my-3">
 
-    <a href="{{ route('payment.vnpayFinal', $booking->id) }}"
-       class="inline-flex items-center gap-2 px-5 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
+    {{-- TRẠNG THÁI --}}
+    <p class="mb-2">
+        <b>Trạng thái đơn:</b>
+        <span class="px-3 py-1 rounded-lg font-semibold {{ $statusColor }}">
+            {{ $statusText }}
+        </span>
+    </p>
 
-        💳 Thanh toán phần còn lại
-    </a>
+    {{-- 🔥 TRẠNG THÁI ADMIN --}}
+    <p>
+        <b>Xác nhận admin:</b>
 
-@endif
+        @if($isConfirmed)
+            <span class="px-3 py-1 rounded-lg bg-green-100 text-green-700 font-semibold">
+                ✔ Đã xác nhận
+            </span>
+        @else
+            <span class="px-3 py-1 rounded-lg bg-yellow-100 text-yellow-700 font-semibold">
+                ⏳ Chờ xác nhận
+            </span>
+        @endif
+    </p>
+
+    {{-- NÚT THANH TOÁN --}}
+    @if($booking->status !== 'paid' && $booking->status !== 'completed' && $booking->status !== 'canceled')
+
+        @if($totalPaid < $booking->deposit_amount)
+            <a href="{{ route('payment.vnpay',$booking->id) }}"
+               class="inline-block mt-4 bg-yellow-500 text-white px-5 py-2 rounded-lg hover:bg-yellow-600">
+                Thanh toán cọc
+            </a>
+
+        @elseif($totalPaid < $booking->total_price)
+            <a href="{{ route('payment.vnpayFinal',$booking->id) }}"
+               class="inline-block mt-4 bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700">
+                Thanh toán phần còn lại
+            </a>
+        @endif
+
+    @endif
 
 </div>
 
@@ -174,145 +210,49 @@ alt="{{ $tour->name }}">
 
 <div class="bg-white shadow-lg rounded-2xl p-6 mb-10">
 
-<h2 class="text-xl font-bold mb-4">Lịch sử thanh toán</h2>
+    <h2 class="text-xl font-bold mb-4">Lịch sử thanh toán</h2>
 
-<table class="w-full text-center">
+    <table class="w-full text-center border">
+        <thead class="bg-slate-100">
+            <tr>
+                <th class="p-3 border">Loại</th>
+                <th class="p-3 border">Số tiền</th>
+                <th class="p-3 border">Trạng thái</th>
+                <th class="p-3 border">Admin</th>
+                <th class="p-3 border">Thời gian</th>
+            </tr>
+        </thead>
 
-<thead class="bg-slate-100">
-<tr>
-<th class="p-3 border">Loại</th>
-<th class="p-3 border">Số tiền</th>
-<th class="p-3 border">Trạng thái</th>
-<th class="p-3 border">Thời gian</th>
-</tr>
-</thead>
+        <tbody>
+            @foreach($booking->payments as $pay)
+            <tr>
+                <td class="p-3 border">
+                    {{ $pay->type_text ?? $pay->type }}
+                </td>
 
-<tbody>
+                <td class="p-3 border text-red-600 font-bold">
+                    {{ number_format($pay->amount) }} VNĐ
+                </td>
 
-@foreach($booking->payments as $pay)
-<tr>
+                <td class="p-3 border">
+                    {{ $pay->status_text }}
+                </td>
 
-<td class="p-3 border">
-@php
-$typeText = match($pay->type){
-    'deposit' => 'Đặt cọc',
-    'final' => 'Thanh toán phần còn lại',
-    'extra' => 'Phụ thu',
-    default => 'Không xác định'
-};
-@endphp
+                <td class="p-3 border">
+                    @if($pay->admin_confirm_status == 'confirmed')
+                        <span class="text-green-600 font-semibold">✔ Đã xác nhận</span>
+                    @else
+                        <span class="text-yellow-600 font-semibold">⏳ Chờ xác nhận</span>
+                    @endif
+                </td>
 
-{{ $typeText }}
-</td>
-
-<td class="p-3 border text-red-600 font-bold">
-{{ number_format($pay->amount) }} VNĐ
-</td>
-
-<td class="p-3 border">
-{{ $pay->status_text }}
-</td>
-
-<td class="p-3 border">
-{{ optional($pay->paid_at)->format('d/m/Y H:i') }}
-</td>
-
-</tr>
-@endforeach
-
-</tbody>
-
-</table>
-
-</div>
-
-@endif
-
-{{-- DANH SÁCH KHÁCH --}}
-<div class="mb-12">
-
-<h2 class="text-xl font-bold mb-6">Danh sách khách đi tour</h2>
-
-@if($booking->customers->count())
-
-<div class="bg-white shadow-lg rounded-2xl overflow-hidden">
-
-<table class="w-full">
-
-<thead class="bg-slate-100">
-<tr class="text-center">
-<th class="p-3 border">Họ tên</th>
-<th class="p-3 border">SĐT</th>
-<th class="p-3 border">Loại khách</th>
-</tr>
-</thead>
-
-<tbody>
-
-@foreach($booking->customers as $customer)
-<tr class="text-center hover:bg-slate-50">
-
-<td class="p-3 border">{{ $customer->name }}</td>
-
-<td class="p-3 border">{{ $customer->phone }}</td>
-
-<td class="p-3 border">
-@php
-$typeText = match($customer->type){
-    'adult' => 'Người lớn',
-    'child' => 'Trẻ em',
-    default => 'Người lớn'
-};
-@endphp
-{{ $typeText }}
-</td>
-
-</tr>
-@endforeach
-
-</tbody>
-
-</table>
-
-</div>
-
-@else
-<p class="text-slate-500">Chưa có khách nào.</p>
-@endif
-
-</div>
-
-{{-- MÔ TẢ TOUR --}}
-<div class="mb-14">
-
-<h2 class="text-2xl font-bold mb-4 text-slate-800">
-Mô tả tour
-</h2>
-
-<div class="text-slate-700 leading-relaxed">
-{!! nl2br(e($tour->description)) !!}
-</div>
-
-</div>
-
-{{-- ALBUM --}}
-@if($tour->images && $tour->images->count())
-
-<div class="mb-14">
-
-<h2 class="text-2xl font-bold mb-6 text-slate-800">
-Hình ảnh tour
-</h2>
-
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-
-@foreach($tour->images as $image)
-<img
-src="{{ asset('storage/'.$image->image) }}"
-class="h-40 w-full object-cover rounded-xl shadow hover:scale-105 transition">
-@endforeach
-
-</div>
+                <td class="p-3 border">
+                    {{ optional($pay->paid_at)->format('d/m/Y H:i') }}
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
 
 </div>
 
@@ -320,12 +260,10 @@ class="h-40 w-full object-cover rounded-xl shadow hover:scale-105 transition">
 
 {{-- BACK --}}
 <div class="text-center mt-10">
-
-<a href="{{ url('/') }}"
-class="bg-slate-800 hover:bg-blue-600 text-white px-8 py-3 rounded-xl font-bold transition">
-Quay lại trang chủ
-</a>
-
+    <a href="{{ route('booking.history') }}"
+       class="bg-slate-800 hover:bg-blue-600 text-white px-8 py-3 rounded-xl font-bold transition">
+        Quay lại lịch sử
+    </a>
 </div>
 
 </div>

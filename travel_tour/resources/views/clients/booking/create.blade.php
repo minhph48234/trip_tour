@@ -63,20 +63,46 @@ Thông tin đặt tour
 <input type="hidden" name="trip_id" value="{{ $trip->id }}">
 <input type="hidden" name="total_price" id="total_price">
 
-{{-- INFO --}}
+{{-- HỌ TÊN --}}
 <div>
-<label>Họ tên</label>
-<input type="text" name="customer_name" required class="w-full border rounded px-3 py-2">
+    <label>Họ tên</label>
+    <input type="text"
+           name="customer_name"
+         
+           class="w-full border rounded px-3 py-2"
+           value="{{ old('customer_name', auth()->user()->name ?? '') }}">
+           @error('customer_name')
+    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+@enderror
 </div>
 
+{{-- SĐT --}}
 <div>
 <label>SĐT</label>
-<input type="text" name="customer_phone" required class="w-full border rounded px-3 py-2">
+<input type="text"
+       name="customer_phone"
+       
+       pattern="^(0|\+84)[0-9]{9}$"
+       title="Số điện thoại phải bắt đầu bằng 0 hoặc +84 và đủ 10 số"
+       class="w-full border rounded px-3 py-2 bg-blue-50
+              @error('customer_phone') border-red-500 @enderror"
+       value="{{ old('customer_phone', auth()->user()->phone ?? '') }}">
+
+@error('customer_phone')
+    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+@enderror
 </div>
 
+{{-- EMAIL --}}
 <div>
-<label>Email</label>
-<input type="email" name="customer_email" class="w-full border rounded px-3 py-2">
+    <label>Email</label>
+    <input type="email"
+           name="customer_email"
+           class="w-full border rounded px-3 py-2"
+           value="{{ old('customer_email', auth()->user()->email ?? '') }}">
+           @error('customer_email')
+    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+@enderror
 </div>
 
 {{-- SỐ NGƯỜI --}}
@@ -87,6 +113,9 @@ min="1"
 max="{{ $trip->max_people - $trip->current_people }}"
 value="1"
 class="w-full border rounded px-3 py-2">
+@error('total_people')
+    <p class="text-red-500 text-sm">{{ $message }}</p>
+@enderror
 </div>
 
 {{-- TABLE --}}
@@ -166,22 +195,22 @@ list.innerHTML += `
 <td>${i+1}</td>
 
 <td>
-<input name="customers[${i}][name]" required class="border px-2 py-1 w-full">
+<input name="customers[${i}][name]"  class="border px-2 py-1 w-full">
 </td>
 
 <td>
-<input name="customers[${i}][phone]" required class="border px-2 py-1 w-full">
+<input name="customers[${i}][phone]"  class="border px-2 py-1 w-full">
 </td>
 
 <td>
-<select name="customers[${i}][gender]" required class="border px-2 py-1 w-full">
+<select name="customers[${i}][gender]"  class="border px-2 py-1 w-full">
 <option value="male">Nam</option>
 <option value="female">Nữ</option>
 </select>
 </td>
 
 <td>
-<input type="date" name="customers[${i}][birthdate]" required class="border px-2 py-1 w-full min-w-[140px]">
+<input type="date" name="customers[${i}][birthdate]"  class="border px-2 py-1 w-full min-w-[140px]">
 </td>
 
 <td>

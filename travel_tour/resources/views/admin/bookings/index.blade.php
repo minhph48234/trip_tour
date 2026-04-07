@@ -4,65 +4,49 @@
 
 @section('content')
 
-<div class="booking-container">
+<div class="container-fluid">
 
-<h2 class="page-title">Danh sách Booking</h2>
+<h4 class="mb-4 fw-bold">Danh sách Booking</h4>
 
-{{-- ================= SEARCH ================= --}}
-<div style="margin-bottom:20px;">
+{{-- SEARCH --}}
+<form method="GET" class="mb-3">
+    <div class="d-flex gap-2" style="max-width:400px">
+        <input type="text" name="keyword" value="{{ request('keyword') }}"
+               class="form-control"
+               placeholder="Tên khách hoặc mã booking">
 
-<form method="GET" action="{{ route('admin.bookings.index') }}">
-
-<div style="display:flex; gap:10px; max-width:400px;">
-
-<input type="text"
-name="keyword"
-value="{{ request('keyword') }}"
-placeholder="Tìm theo tên khách hoặc mã booking..."
-class="form-control">
-
-<button type="submit" class="btn btn-primary">
-Tìm kiếm
-</button>
-
-<a href="{{ route('admin.bookings.index') }}"
-class="btn btn-secondary">
-Reset
-</a>
-
-</div>
-
+        <button class="btn btn-primary">Tìm</button>
+        <a href="{{ route('admin.bookings.index') }}" class="btn btn-secondary">Reset</a>
+    </div>
 </form>
 
-</div>
+<table class="table table-bordered table-hover align-middle text-center">
 
-{{-- ================= TABLE ================= --}}
-<table class="table table-bordered">
-
-<thead>
-
+<thead class="table-dark">
 <tr>
-
 <th>ID</th>
-<th>Mã booking</th>
+<th>Mã</th>
 <th>Tour</th>
 <th>Khách</th>
-<th>Số người</th>
+<th>SL</th>
 <th>Tổng tiền</th>
-
-<th>Tiền cọc</th> {{-- ✅ thêm --}}
-<th>Đã thanh toán</th> {{-- ✅ thêm --}}
-
-<th>Trạng thái</th>
+<th>Đã thanh toán</th>
+<th>Thanh toán</th>
+<th>Admin</th>
 <th>Action</th>
-
 </tr>
-
 </thead>
 
 <tbody>
-
 @forelse($bookings as $booking)
+
+@php
+$totalPaid = $booking->payments->where('status','paid')->sum('amount');
+
+$adminConfirmed = $booking->payments
+    ->where('admin_confirm_status','confirmed')
+    ->count();
+@endphp
 
 <tr>
 
@@ -76,75 +60,54 @@ Reset
 
 <td>{{ $booking->quantity }}</td>
 
-<td>{{ number_format($booking->total_price) }} đ</td>
-
-<td class="text-primary font-weight-bold">
-{{ number_format($booking->deposit_amount ?? ($booking->total_price * 0.5)) }} đ
+<td class="text-danger fw-bold">
+{{ number_format($booking->total_price) }} đ
 </td>
 
-<td class="text-success font-weight-bold">
-{{ number_format($booking->paid_amount ?? 0) }} đ
+<td class="text-success fw-bold">
+{{ number_format($totalPaid) }} đ
+</td>
+
+{{-- TRẠNG THÁI THANH TOÁN --}}
+<td>
+    @if($totalPaid == 0)
+        <span class="badge bg-warning">Chưa thanh toán</span>
+    @elseif($totalPaid < $booking->total_price)
+        <span class="badge bg-info">Đã cọc</span>
+    @else
+        <span class="badge bg-success">Đã thanh toán đủ</span>
+    @endif
+</td>
+
+{{-- ADMIN CONFIRM --}}
+<td>
+    @if($adminConfirmed > 0)
+        <span class="badge bg-success">Đã xác nhận</span>
+    @else
+        <span class="badge bg-warning">Chờ xác nhận</span>
+    @endif
 </td>
 
 <td>
-
-@php
-$statusText = match($booking->status){
-    'pending' => 'Chờ thanh toán',
-    'deposit_paid' => 'Đã đặt cọc',
-    'paid' => 'Đã thanh toán đủ',
-    'completed' => 'Hoàn thành',
-    'canceled' => 'Đã hủy',
-    default => 'Không xác định'
-};
-
-$statusClass = match($booking->status){
-    'pending' => 'badge bg-warning',
-    'deposit_paid' => 'badge bg-info',
-    'paid' => 'badge bg-success',
-    'completed' => 'badge bg-primary',
-    'canceled' => 'badge bg-danger',
-    default => 'badge bg-secondary'
-};
-@endphp
-
-<span class="{{ $statusClass }}">
-{{ $statusText }}
-</span>
-
-</td>
-
-<td>
-
-<a class="btn btn-primary"
-href="{{ route('admin.bookings.show',$booking->id) }}">
-Chi tiết
-</a>
-
+    <a href="{{ route('admin.bookings.show',$booking->id) }}"
+       class="btn btn-sm btn-primary">
+        Chi tiết
+    </a>
 </td>
 
 </tr>
 
 @empty
-
 <tr>
-<td colspan="10" style="text-align:center">
-Không có dữ liệu
-</td>
+<td colspan="10">Không có dữ liệu</td>
 </tr>
-
 @endforelse
 
 </tbody>
 
 </table>
 
-{{-- ================= PAGINATION ================= --}}
-<div class="pagination-wrapper">
-
-{{ $bookings->appends(request()->query())->links() }}
-
-</div>
+{{ $bookings->links() }}
 
 </div>
 
