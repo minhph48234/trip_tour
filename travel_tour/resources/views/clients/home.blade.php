@@ -121,9 +121,9 @@
                                     onerror="this.src='https://via.placeholder.com/600x400?text=Image+Error'">
 
                                 @if ($tour->views > 50)
-                                    <div class="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 text-xs rounded">
+                                    <!-- <div class="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 text-xs rounded">
                                         Tour nổi bật
-                                    </div>
+                                    </div> -->
                                 @endif
 
                             </div>

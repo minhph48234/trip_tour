@@ -20,6 +20,7 @@
     <div class="card mb-4">
         <div class="card-body">
 
+            {{-- TÊN TOUR --}}
             <div class="mb-3">
                 <label>Tên tour</label>
                 <input type="text" name="name"
@@ -27,6 +28,7 @@
                        class="form-control" required>
             </div>
 
+            {{-- DANH MỤC --}}
             <div class="mb-3">
                 <label>Danh mục</label>
                 <select name="category_id" class="form-control" required>
@@ -39,27 +41,111 @@
                 </select>
             </div>
 
+            {{-- ẢNH --}}
+            <div class="mb-3">
+                <label>Ảnh đại diện</label>
+
+                @if($tour->thumbnail)
+                    <div class="mb-2">
+                        <img id="preview"
+                             src="{{ asset('storage/' . $tour->thumbnail) }}"
+                             width="200"
+                             class="img-thumbnail">
+                    </div>
+                @else
+                    <img id="preview" width="200" class="img-thumbnail d-none">
+                @endif
+
+                <input type="file" name="thumbnail" class="form-control"
+                       onchange="previewImage(event)">
+            </div>
+
+            {{-- ĐỊA ĐIỂM --}}
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label>Điểm đi</label>
                     <input type="text" name="departure_location"
-                           value="{{ $tour->departure_location }}"
+                           value="{{ old('departure_location', $tour->departure_location) }}"
                            class="form-control">
                 </div>
 
                 <div class="col-md-6 mb-3">
                     <label>Điểm đến</label>
                     <input type="text" name="destination"
-                           value="{{ $tour->destination }}"
+                           value="{{ old('destination', $tour->destination) }}"
                            class="form-control">
                 </div>
             </div>
 
+            {{-- DURATION --}}
+            <div class="mb-3">
+                <label>Thời gian tour</label>
+                <input type="text" name="duration"
+                       value="{{ old('duration', $tour->duration) }}"
+                       class="form-control"
+                       placeholder="Ví dụ: 3 ngày 2 đêm"
+                       required>
+            </div>
+
+            {{-- PHƯƠNG TIỆN --}}
+            <div class="mb-3">
+                <label>Phương tiện</label>
+                <input type="text" name="transport"
+                       value="{{ old('transport', $tour->transport) }}"
+                       class="form-control">
+            </div>
+
+            {{-- GIÁ --}}
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label>Giá người lớn</label>
+                    <input type="number" name="price"
+                           value="{{ old('price', $tour->price) }}"
+                           class="form-control" required>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label>Giá trẻ em</label>
+                    <input type="number" name="child_price"
+                           value="{{ old('child_price', $tour->child_price) }}"
+                           class="form-control">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label>Số người tối đa</label>
+                    <input type="number" name="max_people"
+                           value="{{ old('max_people', $tour->max_people) }}"
+                           class="form-control" required>
+                </div>
+            </div>
+
+            {{-- TRẠNG THÁI --}}
+            <div class="mb-3">
+                <label>Trạng thái</label>
+                <select name="status" class="form-control">
+                    <option value="active" {{ $tour->status == 'active' ? 'selected' : '' }}>
+                        Hiển thị
+                    </option>
+                    <option value="inactive" {{ $tour->status == 'inactive' ? 'selected' : '' }}>
+                        Ẩn
+                    </option>
+                </select>
+            </div>
+
+            {{-- MÔ TẢ --}}
             <div class="mb-3">
                 <label>Mô tả</label>
                 <textarea name="description"
                           class="form-control"
-                          rows="4">{{ $tour->description }}</textarea>
+                          rows="4">{{ old('description', $tour->description) }}</textarea>
+            </div>
+
+            {{-- HIGHLIGHT --}}
+            <div class="mb-3">
+                <label>Điểm nổi bật</label>
+                <textarea name="highlight"
+                          class="form-control"
+                          rows="3">{{ old('highlight', $tour->highlight) }}</textarea>
             </div>
 
         </div>
@@ -69,7 +155,7 @@
 
 </form>
 
-{{-- ================= ITINERARY ================= --}}
+{{-- ================= LỊCH TRÌNH ================= --}}
 <div class="card">
     <div class="card-header">
         <h5>📅 Lịch trình tour</h5>
@@ -145,5 +231,18 @@
 
     </div>
 </div>
+
+{{-- PREVIEW ẢNH --}}
+<script>
+function previewImage(event) {
+    const reader = new FileReader();
+    reader.onload = function(){
+        const img = document.getElementById('preview');
+        img.src = reader.result;
+        img.classList.remove('d-none');
+    }
+    reader.readAsDataURL(event.target.files[0]);
+}
+</script>
 
 @endsection
