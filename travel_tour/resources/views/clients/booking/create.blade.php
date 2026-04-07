@@ -100,6 +100,9 @@ Thông tin đặt tour
            name="customer_email"
            class="w-full border rounded px-3 py-2"
            value="{{ old('customer_email', auth()->user()->email ?? '') }}">
+           @error('customer_email')
+    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+@enderror
 </div>
 
 {{-- SỐ NGƯỜI --}}

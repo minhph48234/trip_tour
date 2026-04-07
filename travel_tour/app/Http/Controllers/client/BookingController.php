@@ -48,7 +48,7 @@ class BookingController extends Controller
             'trip_id' => 'required|exists:trips,id',
             'customer_name' => 'required|string|max:255',
             'customer_phone' => 'required|string|max:20',
-            'customer_email' => 'nullable|email',
+            'customer_email' => 'required|email',
             'total_people' => 'required|integer|min:1',
             'customers' => 'required|array',
             'customers.*.name' => 'required|string|max:255',
