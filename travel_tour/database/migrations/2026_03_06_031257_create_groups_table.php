@@ -20,7 +20,11 @@ return new class extends Migration
             $table->integer('current_people')->default(0);
 
             $table->enum('status',['open','full','closed'])->default('open');
-
+            $table->enum('progress', [
+                'pending',     // chưa hoàn thành
+                'ongoing',     // đang diễn ra
+                'completed'    // hoàn thành
+            ])->default('pending');
             $table->string('note')->nullable();
 
         });

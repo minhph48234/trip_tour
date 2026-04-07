@@ -17,15 +17,14 @@
         <table class="w-full text-center border rounded-xl overflow-hidden">
 
             <thead class="bg-gray-100">
-
                 <tr>
                     <th class="p-3 border">#</th>
                     <th class="p-3 border">Tên tour</th>
-                    <th class="p-3 border">Ngày khởi hành</th>
+                    <th class="p-3 border">Ngày đi</th>
+                    <th class="p-3 border">Ngày về</th>
                     <th class="p-3 border">Số khách</th>
                     <th class="p-3 border">Trạng thái</th>
                 </tr>
-
             </thead>
 
             <tbody>
@@ -43,7 +42,11 @@
                     </td>
 
                     <td class="p-3 border">
-                        {{ $group->trip->departure_date ?? '---' }}
+                        {{ $group->trip->start_date ?? '---' }}
+                    </td>
+
+                    <td class="p-3 border">
+                        {{ $group->trip->end_date ?? '---' }}
                     </td>
 
                     <td class="p-3 border">
@@ -51,27 +54,9 @@
                     </td>
 
                     <td class="p-3 border">
-
-                        @php
-                            $statusText = match($group->status){
-                                'completed' => 'Đã hoàn thành',
-                                'running' => 'Đang diễn ra',
-                                'cancelled' => 'Đã huỷ',
-                                default => $group->status
-                            };
-
-                            $statusColor = match($group->status){
-                                'completed' => 'bg-green-100 text-green-700',
-                                'running' => 'bg-blue-100 text-blue-700',
-                                'cancelled' => 'bg-red-100 text-red-700',
-                                default => 'bg-gray-100 text-gray-700'
-                            };
-                        @endphp
-
-                        <span class="px-3 py-1 rounded-lg text-sm font-semibold {{ $statusColor }}">
-                            {{ $statusText }}
+                        <span class="px-3 py-1 rounded-lg text-sm font-semibold bg-green-100 text-green-700">
+                            Hoàn thành
                         </span>
-
                     </td>
 
                 </tr>
@@ -87,7 +72,7 @@
     @else
 
     <div class="text-center py-10 text-gray-500">
-        Chưa có tour nào đã dẫn.
+        Chưa có tour nào đã hoàn thành.
     </div>
 
     @endif

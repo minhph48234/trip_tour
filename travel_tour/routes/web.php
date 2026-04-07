@@ -157,7 +157,8 @@ Route::middleware(['auth','role:guide'])
 
         Route::get('/groups', [GuideController::class,'groups'])
             ->name('groups');
-
+        Route::post('/groups/{id}/progress', [GuideController::class,'updateProgress'])
+            ->name('groups.progress');
         // CHI TIẾT TOUR ĐƯỢC PHÂN CÔNG
         Route::get('/groups/{id}', [GuideController::class,'groupDetail'])
             ->name('groups.detail');

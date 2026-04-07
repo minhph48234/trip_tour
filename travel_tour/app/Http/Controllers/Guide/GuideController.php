@@ -19,195 +19,176 @@ class GuideController extends Controller
     =========================
     */
     public function dashboard()
-    {
-        // ⚠️ Nếu guide_id = user_id thì dùng Auth::id()
-        $guideId = Auth::id();
+{
+    $guideId = auth()->user()->guide->id;
 
-        /*
-        =========================
-        DANH SÁCH GROUP
-        =========================
-        */
-        $groups = Group::with(['trip.tour','bookings'])
-            ->where('guide_id', $guideId)
-            ->get();
+    // tất cả group
+    $groups = Group::with(['trip.tour'])
+        ->where('guide_id', $guideId)
+        ->get();
 
-        /*
-        =========================
-        TOUR HÔM NAY
-        =========================
-        */
-        $todayTours = Group::with(['trip.tour'])
-            ->where('guide_id', $guideId)
-            ->whereHas('trip', function($q){
-                $q->whereDate('start_date', now());
-            })
-            ->get();
+    // tổng tour
+    $totalTours = $groups->count();
 
-        /*
-        =========================
-        TOUR ĐANG DIỄN RA
-        =========================
-        */
-        $ongoingTours = Group::where('guide_id', $guideId)
-            ->whereHas('trip', function($q){
-                $q->whereDate('start_date','<=', now())
-                  ->whereDate('end_date','>=', now());
-            })
-            ->count();
+    // tổng khách
+    $totalCustomers = Booking::whereHas('group', function($q) use ($guideId){
+        $q->where('guide_id', $guideId);
+    })->sum('quantity');
 
-        /*
-        =========================
-        TỔNG KHÁCH
-        =========================
-        */
-        $totalCustomers = Booking::whereHas('group', function($q) use ($guideId){
-            $q->where('guide_id', $guideId);
-        })->sum('quantity');
+    // tour trong tuần
+    $weeklyTours = Group::where('guide_id', $guideId)
+        ->whereHas('trip', function($q){
+            $q->whereBetween('start_date', [
+                now()->startOfWeek(),
+                now()->endOfWeek()
+            ]);
+        })->count();
 
-        /*
-        =========================
-        TỔNG TOUR
-        =========================
-        */
-        $totalTours = $groups->count();
+    // tour trong tháng
+    $monthlyTours = Group::where('guide_id', $guideId)
+        ->whereHas('trip', function($q){
+            $q->whereMonth('start_date', now()->month)
+              ->whereYear('start_date', now()->year);
+        })->count();
 
-        /*
-        =========================
-        GROUP MỚI NHẤT (FIX LỖI Ở ĐÂY)
-        =========================
-        */
-        $latestGroups = Group::with(['trip.tour'])
-            ->where('guide_id', $guideId)
-            ->orderByDesc('id') // ✅ FIX: thay latest()
-            ->limit(5)
-            ->get();
+    // danh sách tour được phân công
+    $assignedTours = Group::with(['trip.tour'])
+        ->where('guide_id', $guideId)
+        ->orderByDesc('id')
+        ->limit(5)
+        ->get();
 
-        /*
-        =========================
-        RETURN VIEW
-        =========================
-        */
-        return view('guide.dashboard', compact(
-            'totalTours',
-            'totalCustomers',
-            'ongoingTours',
-            'todayTours',
-            'latestGroups'
-        ));
-    }
+    return view('guide.dashboard', compact(
+        'totalTours',
+        'totalCustomers',
+        'weeklyTours',
+        'monthlyTours',
+        'assignedTours'
+    ));
+}
 
     /*
     =========================
     DANH SÁCH GROUP
     =========================
     */
-    // group được phân công
-public function groups()
-{
+    public function groups()
+    {
+        $guide_id = auth()->user()->guide->id;
 
-$guide_id = auth()->user()->guide->id;
-
-$groups = Group::where('guide_id',$guide_id)
-            ->with('trip.tour')
+        $groups = Group::where('guide_id', $guide_id)
+            ->with(['trip.tour'])
             ->get();
 
-return view('guide.groups',compact('groups'));
+        return view('guide.groups', compact('groups'));
+    }
 
-}
+    /*
+    =========================
+    CẬP NHẬT TRẠNG THÁI GROUP
+    =========================
+    */
+    public function updateProgress(Request $request, $id)
+    {
+        $group = Group::findOrFail($id);
 
+        $request->validate([
+            'progress' => 'required|in:pending,ongoing,completed'
+        ]);
 
-// danh sách khách
-public function customers($group_id)
-{
+        $group->progress = $request->progress;
+        $group->save();
 
-$customers = BookingCustomer::whereHas('booking',function($q) use ($group_id){
-    $q->where('group_id',$group_id);
-})->get();
+        return redirect()->back()->with('success', 'Cập nhật trạng thái thành công');
+    }
 
-return view('guide.customers',compact('customers','group_id'));
+    /*
+    =========================
+    DANH SÁCH KHÁCH
+    =========================
+    */
+    public function customers($group_id)
+    {
+        $customers = BookingCustomer::whereHas('booking',function($q) use ($group_id){
+            $q->where('group_id',$group_id);
+        })->get();
 
-}
+        return view('guide.customers',compact('customers','group_id'));
+    }
 
+    /*
+    =========================
+    TRANG ĐIỂM DANH
+    =========================
+    */
+    public function attendance($group_id)
+    {
+        $customers = BookingCustomer::whereHas('booking',function($q) use ($group_id){
+            $q->where('group_id',$group_id);
+        })->get();
 
-// trang điểm danh
-public function attendance($group_id)
-{
+        return view('guide.attendance',compact('customers','group_id'));
+    }
 
-$customers = BookingCustomer::whereHas('booking',function($q) use ($group_id){
-    $q->where('group_id',$group_id);
-})->get();
+    /*
+    =========================
+    LƯU ĐIỂM DANH
+    =========================
+    */
+    public function saveAttendance(Request $request,$group_id)
+    {
+        $guide_id = auth()->user()->guide->id;
+        $group = Group::findOrFail($group_id);
 
-return view('guide.attendance',compact('customers','group_id'));
+        $attendance = Attendance::create([
+            'trip_id' => $group->trip_id,
+            'group_id' => $group->id,
+            'guide_id' => $guide_id,
+            'attendance_date' => now()->toDateString(),
+            'session' => $request->session,
+            'note' => $request->note
+        ]);
 
-}
+        foreach($request->status as $customer_id => $status){
+            AttendanceDetail::create([
+                'attendance_id' => $attendance->id,
+                'booking_customer_id' => $customer_id,
+                'status' => $status,
+                'note' => $request->note_customer[$customer_id] ?? null,
+                'marked_at' => now()
+            ]);
+        }
 
+        return redirect()->back()->with('success','Điểm danh thành công');
+    }
 
+    /*
+    =========================
+    CHI TIẾT GROUP
+    =========================
+    */
+    public function groupDetail($id)
+    {
+        $group = Group::with(['trip.tour', 'bookings.customers'])
+            ->findOrFail($id);
 
-/*
-|--------------------------------------------------------------------------
-| LƯU ĐIỂM DANH
-|--------------------------------------------------------------------------
+        return view('guide.group_detail', compact('group'));
+    }
+    /*
+=========================
+LỊCH SỬ TOUR ĐÃ DẪN
+=========================
 */
-
-public function saveAttendance(Request $request,$group_id)
+public function history()
 {
+    $guide_id = auth()->user()->guide->id;
 
-$guide_id = auth()->user()->guide->id;
+    $groups = Group::where('guide_id', $guide_id)
+        ->where('progress', 'completed') // ✅ chỉ lấy tour hoàn thành
+        ->with(['trip.tour'])
+        ->orderByDesc('id')
+        ->get();
 
-$group = Group::findOrFail($group_id);
-
-
-/*
-|--------------------------------------------------------------------------
-| TẠO BẢN GHI ĐIỂM DANH
-|--------------------------------------------------------------------------
-*/
-
-$attendance = Attendance::create([
-
-    'trip_id' => $group->trip_id,
-    'group_id' => $group->id,
-    'guide_id' => $guide_id,
-    'attendance_date' => now()->toDateString(),
-    'session' => $request->session,
-    'note' => $request->note
-
-]);
-
-
-/*
-|--------------------------------------------------------------------------
-| LƯU CHI TIẾT TỪNG KHÁCH
-|--------------------------------------------------------------------------
-*/
-
-foreach($request->status as $customer_id => $status){
-
-AttendanceDetail::create([
-
-    'attendance_id' => $attendance->id,
-    'booking_customer_id' => $customer_id,
-    'status' => $status,
-    'note' => $request->note_customer[$customer_id] ?? null,
-    'marked_at' => now()
-
-]);
-
-}
-
-
-return redirect()
-    ->back()
-    ->with('success','Điểm danh thành công');
-
-}
-
-public function groupDetail($id)
-{
-    $group = Group::with(['trip.tour', 'bookings.customers'])
-        ->findOrFail($id);
-
-    return view('guide.group_detail', compact('group'));
+    return view('guide.history', compact('groups'));
 }
 }
