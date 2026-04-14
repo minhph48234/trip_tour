@@ -16,6 +16,13 @@
         {{ $group->trip->end_date->format('d/m/Y') }}
     </p>
 
+    <p>
+        <b>Số khách:</b> 
+        <span class="badge bg-info">
+            {{ $group->current_people }}/{{ $group->max_people }}
+        </span>
+    </p>
+
     <p><b>Guide hiện tại:</b> 
         @if($group->guide)
             <span class="badge bg-success">{{ $group->guide->name }}</span>
@@ -35,6 +42,14 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
+    {{-- 🔥 CẢNH BÁO CHƯA ĐỦ KHÁCH --}}
+    @if($group->current_people < $group->min_people)
+        <div class="alert alert-warning">
+            ⚠ Đoàn chưa đủ khách (tối thiểu {{ $group->min_people }} khách). 
+            Không thể phân công hướng dẫn viên!
+        </div>
+    @endif
+
     {{-- ================= ASSIGN GUIDE ================= --}}
     <h4 class="mb-3">Phân công hướng dẫn viên</h4>
 
@@ -43,7 +58,8 @@
         @method('PUT')
 
         <div class="mb-3">
-            <select name="guide_id" class="form-control">
+            <select name="guide_id" class="form-control"
+                {{ $group->current_people < $group->min_people ? 'disabled' : '' }}>
 
                 <option value="">-- Chọn hướng dẫn viên --</option>
 
@@ -52,7 +68,7 @@
                     @php
                         $isSelected = $group->guide_id == $guide->id;
 
-                        // 🔥 CHECK TRÙNG LỊCH CHUẨN
+                        // 🔥 CHECK TRÙNG LỊCH
                         $isBusy = \App\Models\Group::where('guide_id', $guide->id)
                             ->where('id', '!=', $group->id)
                             ->whereHas('trip', function ($q) use ($group) {
@@ -86,7 +102,10 @@
             </select>
         </div>
 
-        <button class="btn btn-primary">Phân công</button>
+        <button class="btn btn-primary"
+            {{ $group->current_people < $group->min_people ? 'disabled' : '' }}>
+            Phân công
+        </button>
     </form>
 
     <hr>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 use App\Models\Trip;
 use App\Models\Booking;
@@ -19,31 +20,24 @@ class BookingController extends Controller
     FORM ĐẶT TOUR
     ===============================
     */
-
     public function create(Request $request, $trip = null)
     {
-        // ưu tiên lấy từ query (?trip=)
-        if($request->trip){
+        if ($request->trip) {
             $trip = $request->trip;
         }
 
-        $trip = \App\Models\Trip::findOrFail($trip);
+        $trip = Trip::findOrFail($trip);
 
         return view('clients.booking.create', compact('trip'));
     }
-
-
 
     /*
     ===============================
     LƯU BOOKING + AUTO GHÉP ĐOÀN
     ===============================
     */
-
     public function store(Request $request)
     {
-
-        // ===== VALIDATE =====
         $request->validate([
             'trip_id' => 'required|exists:trips,id',
             'customer_name' => 'required|string|max:255',
@@ -59,20 +53,31 @@ class BookingController extends Controller
 
         try {
 
-            // ===== LẤY TRIP + TOUR =====
             $trip = Trip::with('tour')->findOrFail($request->trip_id);
 
-            $availableSeats = $trip->max_people - $trip->current_people;
+            /*
+            =================================
+            🔥 CHẶN ĐẶT TOUR (QUAN TRỌNG)
+            =================================
+            */
 
-            // ===== KIỂM TRA SỐ CHỖ =====
-            if ($request->total_people > $availableSeats) {
+            $today = Carbon::today();
+            $startDate = Carbon::parse($trip->start_date);
+
+            $daysLeft = $today->diffInDays($startDate, false);
+
+            // ❌ Chặn toàn bộ case lỗi
+            if (
+                $trip->status !== 'open' ||
+                $daysLeft <= 2 ||
+                $startDate->isPast()
+            ) {
                 return back()
-                    ->with('error', 'Số chỗ không đủ')
+                    ->with('error', 'Tour đã đóng / đã quá ngày / hoặc sắp khởi hành (≤ 2 ngày). Không thể đặt.')
                     ->withInput();
             }
 
             $quantity = $request->total_people;
-
 
             /*
             =================================
@@ -81,23 +86,25 @@ class BookingController extends Controller
             */
 
             $group = Group::where('trip_id', $trip->id)
-                ->where('status', 'open')
+                ->whereIn('status', [
+                    Group::STATUS_PENDING,
+                    Group::STATUS_CONFIRMED
+                ])
                 ->whereRaw('(max_people - current_people) >= ?', [$quantity])
                 ->first();
 
-            // Nếu không có đoàn phù hợp thì tạo mới
             if (!$group) {
-
                 $group = Group::create([
                     'trip_id' => $trip->id,
-                    'type' => 'group',
+                    'type' => Group::TYPE_GROUP,
+                    'min_people' => 5,
                     'max_people' => $trip->max_people,
                     'current_people' => 0,
-                    'status' => 'open',
+                    'status' => Group::STATUS_PENDING,
+                    'progress' => Group::PROGRESS_PENDING,
                     'note' => 'Auto created group'
                 ]);
             }
-
 
             /*
             =================================
@@ -108,7 +115,7 @@ class BookingController extends Controller
             $bookingCode = 'BK' . date('YmdHis');
 
             $totalPrice = $trip->tour->price * $quantity;
-            $depositAmount = $totalPrice * 0.5; // số tiền cần cọc
+            $depositAmount = $totalPrice * 0.5;
 
             $booking = Booking::create([
                 'booking_code' => $bookingCode,
@@ -121,21 +128,12 @@ class BookingController extends Controller
                 'customer_email' => $request->customer_email,
                 'quantity' => $quantity,
                 'total_price' => $totalPrice,
-                
                 'deposit_amount' => $depositAmount,
                 'paid_amount' => 0,
                 'status' => 'pending'
             ]);
 
-
-            /*
-            =================================
-            LƯU DANH SÁCH KHÁCH
-            =================================
-            */
-
             foreach ($request->customers as $customer) {
-
                 BookingCustomer::create([
                     'booking_id' => $booking->id,
                     'name' => $customer['name'],
@@ -146,36 +144,27 @@ class BookingController extends Controller
                 ]);
             }
 
-
             /*
             =================================
-            CẬP NHẬT GROUP
+            UPDATE GROUP
             =================================
             */
 
             $group->increment('current_people', $quantity);
-
-            if ($group->current_people >= $group->max_people) {
-
-                $group->update([
-                    'status' => 'full'
-                ]);
-            }
-
+            $group->refresh();
+            $group->updateStatus();
 
             /*
             =================================
-            CẬP NHẬT TRIP
+            UPDATE TRIP
             =================================
             */
-
             $trip->increment('current_people', $quantity);
-
 
             DB::commit();
 
-            return redirect()
-                ->route('payment.vnpay',$booking->id);
+            return redirect()->route('payment.vnpay', $booking->id);
+
         } catch (\Exception $e) {
 
             DB::rollBack();
@@ -189,19 +178,13 @@ class BookingController extends Controller
     LỊCH SỬ BOOKING
     ===============================
     */
-
-   public function myBookings() 
+    public function myBookings()
     {
         $bookings = Booking::where('user_id', auth()->id())
-            ->with([
-                'trip.tour',
-                'group',
-                'payments'
-            ])
+            ->with(['trip.tour','group','payments'])
             ->latest()
             ->paginate(10);
 
-        // ✅ cập nhật status cho từng booking
         foreach ($bookings as $booking) {
             $this->updateBookingStatus($booking);
         }
@@ -209,13 +192,11 @@ class BookingController extends Controller
         return view('clients.booking.history', compact('bookings'));
     }
 
-
     /*
     ===============================
     CHI TIẾT BOOKING
     ===============================
     */
-
     public function show($id)
     {
         $booking = Booking::with([
@@ -228,7 +209,6 @@ class BookingController extends Controller
         ->where('user_id', auth()->id())
         ->firstOrFail();
 
-        // ✅ cập nhật trạng thái theo tiền đã thanh toán
         $this->updateBookingStatus($booking);
 
         $payments = $booking->payments;
@@ -247,7 +227,6 @@ class BookingController extends Controller
         } elseif ($paid >= $deposit) {
             $booking->status = 'deposit_paid';
         } else {
-            // 🔥 KEY: < deposit vẫn là pending
             $booking->status = 'pending';
         }
 

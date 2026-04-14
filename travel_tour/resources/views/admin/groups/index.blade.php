@@ -30,7 +30,7 @@
                        class="form-control">
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-5">
                 <button class="btn btn-primary">
                     <i class="fas fa-search"></i> Tìm kiếm
                 </button>
@@ -56,6 +56,8 @@
                         <th>Ngày đi</th>
                         <th>Ngày về</th>
                         <th>Số khách</th>
+                        <th>Trạng thái</th>
+                        <th>Tiến trình</th>
                         <th>Hướng dẫn viên</th>
                         <th width="120">Hành động</th>
                     </tr>
@@ -92,6 +94,41 @@
                             <span class="badge bg-info">
                                 {{ $group->current_people }}/{{ $group->max_people }}
                             </span>
+
+                            {{-- còn thiếu bao nhiêu để đủ --}}
+                            @if($group->current_people < $group->min_people)
+                                <div class="text-danger small">
+                                    Còn {{ $group->min_people - $group->current_people }} người để khởi hành
+                                </div>
+                            @else
+                                <div class="text-success small">
+                                    Đã đủ khách
+                                </div>
+                            @endif
+                        </td>
+
+                        {{-- STATUS --}}
+                        <td class="text-center">
+                            @if($group->status == 'pending')
+                                <span class="badge bg-warning text-dark">Chờ đủ khách</span>
+                            @elseif($group->status == 'confirmed')
+                                <span class="badge bg-success">Đã xác nhận</span>
+                            @elseif($group->status == 'full')
+                                <span class="badge bg-primary">Đã đầy</span>
+                            @elseif($group->status == 'cancelled')
+                                <span class="badge bg-danger">Đã hủy</span>
+                            @endif
+                        </td>
+
+                        {{-- PROGRESS --}}
+                        <td class="text-center">
+                            @if($group->progress == 'pending')
+                                <span class="badge bg-secondary">Chưa khởi hành</span>
+                            @elseif($group->progress == 'ongoing')
+                                <span class="badge bg-info text-dark">Đang diễn ra</span>
+                            @elseif($group->progress == 'completed')
+                                <span class="badge bg-dark">Đã hoàn thành</span>
+                            @endif
                         </td>
 
                         {{-- GUIDE --}}
@@ -118,7 +155,7 @@
                     @empty
 
                     <tr>
-                        <td colspan="7" class="text-center text-muted">
+                        <td colspan="9" class="text-center text-muted">
                             Không có dữ liệu
                         </td>
                     </tr>

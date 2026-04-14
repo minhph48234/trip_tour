@@ -12,6 +12,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\UpdateGuideStatus::class,
+        \App\Console\Commands\CloseTripBeforeStart::class, 
     ];
 
     /**
@@ -19,10 +20,26 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // chạy mỗi ngày 1 lần
+        /*
+        |--------------------------------------------------------------------------
+        | 1. UPDATE TRẠNG THÁI HƯỚNG DẪN VIÊN
+        |--------------------------------------------------------------------------
+        */
         $schedule->command('guide:update-status')->daily();
 
-        // nếu muốn test nhanh có thể dùng:
+        /*
+        |--------------------------------------------------------------------------
+        | 2. AUTO ĐÓNG TRIP TRƯỚC 2 NGÀY
+        |--------------------------------------------------------------------------
+        */
+        $schedule->command('trip:auto-close')->daily();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 🔥 TEST NHANH (CHỈ DÙNG KHI DEV)
+        |--------------------------------------------------------------------------
+        */
+        // $schedule->command('trip:auto-close')->everyMinute();
         // $schedule->command('guide:update-status')->everyMinute();
     }
 
@@ -35,4 +52,6 @@ class Kernel extends ConsoleKernel
 
         require base_path('routes/console.php');
     }
+
+   
 }
