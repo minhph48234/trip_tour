@@ -82,25 +82,33 @@ class PaymentController extends Controller
             return back()->with('error', 'Thanh toán chưa hoàn tất!');
         }
 
-        // ❌ đã xác nhận rồi thì không xác nhận lại
+        // ❌ đã xác nhận full rồi thì chặn
         if ($payment->admin_confirm_status === 'confirmed') {
-            return back()->with('error', 'Thanh toán này đã được xác nhận!');
+            return back()->with('error', 'Thanh toán này đã được xác nhận đủ!');
         }
 
-        // ✅ cập nhật trạng thái admin
-        $payment->admin_confirm_status = 'confirmed';
+        // =========================================
+        // 🔥 PHÂN BIỆT CỌC VS THANH TOÁN HẾT
+        // =========================================
+        if ($payment->type === 'deposit') {
+            $payment->admin_confirm_status = 'deposit_confirmed';
+        } else {
+            $payment->admin_confirm_status = 'confirmed';
+        }
+
+        $payment->confirmed_at = now();
         $payment->save();
 
-        // =====================================
-        // 🔥 CẬP NHẬT BOOKING THEO TIỀN
-        // =====================================
+        // =========================================
+        // 🔥 UPDATE BOOKING
+        // =========================================
         $booking = $payment->booking;
 
         $totalPaid = $booking->payments()
             ->where('status', 'paid')
+            ->whereIn('admin_confirm_status', ['deposit_confirmed','confirmed'])
             ->sum('amount');
 
-        // cập nhật số tiền đã thanh toán
         $booking->paid_amount = $totalPaid;
 
         if ($totalPaid >= $booking->total_price) {
@@ -113,6 +121,6 @@ class PaymentController extends Controller
 
         $booking->save();
 
-        return back()->with('success', 'Đã xác nhận thanh toán thành công!');
+        return back()->with('success', 'Xác nhận thanh toán thành công!');
     }
 }

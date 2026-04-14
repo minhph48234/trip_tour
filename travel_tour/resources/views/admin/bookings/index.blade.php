@@ -43,8 +43,13 @@
 @php
 $totalPaid = $booking->payments->where('status','paid')->sum('amount');
 
-$adminConfirmed = $booking->payments
+// 🔥 CHECK ADMIN STATUS
+$hasFullConfirm = $booking->payments
     ->where('admin_confirm_status','confirmed')
+    ->count();
+
+$hasDepositConfirm = $booking->payments
+    ->where('admin_confirm_status','deposit_confirmed')
     ->count();
 @endphp
 
@@ -79,12 +84,16 @@ $adminConfirmed = $booking->payments
     @endif
 </td>
 
-{{-- ADMIN CONFIRM --}}
+{{-- 🔥 ADMIN CONFIRM --}}
 <td>
-    @if($adminConfirmed > 0)
-        <span class="badge bg-success">Đã xác nhận</span>
+    @if($hasFullConfirm > 0)
+        <span class="badge bg-success">✔ Đã xác nhận full</span>
+
+    @elseif($hasDepositConfirm > 0)
+        <span class="badge bg-info text-dark">💰 Đã xác nhận cọc</span>
+
     @else
-        <span class="badge bg-warning">Chờ xác nhận</span>
+        <span class="badge bg-warning">⏳ Chờ xác nhận</span>
     @endif
 </td>
 

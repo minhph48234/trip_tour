@@ -185,7 +185,11 @@
                             {{-- ADMIN CONFIRM --}}
                             <td>
                                 @if($p->admin_confirm_status == 'confirmed')
-                                    <span class="badge bg-success">✔ Đã xác nhận</span>
+                                    <span class="badge bg-success">✔ Đã thanh toán đủ</span>
+
+                                @elseif($p->admin_confirm_status == 'deposit_confirmed')
+                                    <span class="badge bg-info text-dark">💰 Đã xác nhận cọc</span>
+
                                 @else
                                     <span class="badge bg-warning text-dark">⏳ Chờ xác nhận</span>
                                 @endif
@@ -203,7 +207,7 @@
                                 {{-- CONFIRM --}}
                                 @if(
                                     $p->status == 'paid'
-                                    && $p->admin_confirm_status != 'confirmed'
+                                    && $p->admin_confirm_status !== 'confirmed'
                                 )
                                 <form action="{{ route('admin.payments.confirm',$p->id) }}"
                                       method="POST" class="d-inline">

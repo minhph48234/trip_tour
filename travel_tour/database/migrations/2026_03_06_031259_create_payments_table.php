@@ -31,7 +31,7 @@ return new class extends Migration
                 ->default('pending');
 
             // 🔥 TRẠNG THÁI XÁC NHẬN ADMIN
-            $table->enum('admin_confirm', ['pending','confirmed'])
+            $table->enum('admin_confirm_status', ['pending','confirmed'])
                 ->default('pending');
 
             // 🔥 THỜI GIAN ADMIN XÁC NHẬN (PRO)
