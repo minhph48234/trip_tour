@@ -16,6 +16,7 @@ return new class extends Migration
 
             $table->enum('type',['private','couple','group']);
 
+            $table->integer('min_people'); // tối thiểu
             $table->integer('max_people');
             $table->integer('current_people')->default(0);
 
