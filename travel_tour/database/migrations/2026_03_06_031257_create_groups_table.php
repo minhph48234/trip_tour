@@ -20,7 +20,14 @@ return new class extends Migration
             $table->integer('max_people');
             $table->integer('current_people')->default(0);
 
-            $table->enum('status',['open','full','closed'])->default('open');
+            // Trạng thái
+            $table->enum('status', [
+                'pending',    // chưa đủ khách
+                'confirmed',  // đủ khách
+                'full',       // đầy
+                'cancelled'   // hủy
+            ])->default('pending'); 
+            
             $table->enum('progress', [
                 'pending',     // chưa hoàn thành
                 'ongoing',     // đang diễn ra
