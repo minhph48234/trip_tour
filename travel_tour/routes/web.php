@@ -129,6 +129,11 @@ Route::middleware(['auth','role:admin'])
             [GroupController::class,'assignGuide'])
             ->name('groups.assignGuide');
 
+        // thay đổi trạng thái chuyển nhượng
+        Route::put('/groups/{id}/toggle-transfer',
+            [GroupController::class,'toggleTransfer'])
+            ->name('groups.toggleTransfer');
+
         // danh sách điểm danh
         Route::get('/attendances', [\App\Http\Controllers\Admin\AttendanceController::class,'index'])
             ->name('attendances.index');
@@ -171,6 +176,10 @@ Route::middleware(['auth','role:guide'])
         Route::get('/dashboard', [GuideController::class,'dashboard'])
             ->name('dashboard');
 
+        Route::post('/notifications/read', function () {
+            auth()->user()->unreadNotifications->markAsRead();
+            return response()->json(['success' => true]);
+        })->name('notifications.read');
 
         Route::get('/groups', [GuideController::class,'groups'])
             ->name('groups');

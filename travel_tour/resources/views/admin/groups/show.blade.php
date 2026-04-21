@@ -23,6 +23,34 @@
         </span>
     </p>
 
+    {{-- 🔥 CHUYỂN NHƯỢNG --}}
+    <p>
+        <b>Chuyển nhượng:</b>
+
+        @if($group->transfer_status == 'for_transfer')
+            <span class="badge bg-danger">🔥 Đang chuyển nhượng</span>
+        @else
+            <span class="badge bg-success">Bình thường</span>
+        @endif
+    </p>
+
+    {{-- 🔥 BUTTON TOGGLE --}}
+    <form action="{{ route('admin.groups.toggleTransfer', $group->id) }}" method="POST" class="mb-3">
+        @csrf
+        @method('PUT')
+
+        @if($group->transfer_status == 'for_transfer')
+            <button class="btn btn-success">
+                Tắt chuyển nhượng
+            </button>
+        @else
+            <button class="btn btn-danger"
+                {{ $group->current_people >= $group->min_people ? 'disabled' : '' }}>
+                Bật chuyển nhượng
+            </button>
+        @endif
+    </form>
+
     <p><b>Guide hiện tại:</b> 
         @if($group->guide)
             <span class="badge bg-success">{{ $group->guide->name }}</span>
@@ -33,7 +61,7 @@
 
     <hr>
 
-    {{-- ================= ALERT ================= --}}
+    {{-- ALERT --}}
     @if(session('error'))
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
@@ -42,7 +70,7 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    {{-- 🔥 CẢNH BÁO CHƯA ĐỦ KHÁCH --}}
+    {{-- 🔥 CẢNH BÁO --}}
     @if($group->current_people < $group->min_people)
         <div class="alert alert-warning">
             ⚠ Đoàn chưa đủ khách (tối thiểu {{ $group->min_people }} khách). 
@@ -50,7 +78,7 @@
         </div>
     @endif
 
-    {{-- ================= ASSIGN GUIDE ================= --}}
+    {{-- ASSIGN GUIDE --}}
     <h4 class="mb-3">Phân công hướng dẫn viên</h4>
 
     <form action="{{ route('admin.groups.assignGuide',$group->id) }}" method="POST">
@@ -68,7 +96,6 @@
                     @php
                         $isSelected = $group->guide_id == $guide->id;
 
-                        // 🔥 CHECK TRÙNG LỊCH
                         $isBusy = \App\Models\Group::where('guide_id', $guide->id)
                             ->where('id', '!=', $group->id)
                             ->whereHas('trip', function ($q) use ($group) {
@@ -110,7 +137,7 @@
 
     <hr>
 
-    {{-- ================= BOOKING LIST ================= --}}
+    {{-- BOOKING LIST --}}
     <h4 class="mb-3">Danh sách booking</h4>
 
     <table class="table table-bordered">

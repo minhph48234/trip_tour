@@ -43,7 +43,6 @@ class BookingController extends Controller
             'customer_name' => 'required|string|max:255',
             'customer_phone' => 'required|string|max:20',
             'customer_email' => 'required|email',
-
             'customers' => 'required|array|min:1',
             'customers.*.name' => 'required|string|max:255',
             'customers.*.phone' => 'required|string|max:20',

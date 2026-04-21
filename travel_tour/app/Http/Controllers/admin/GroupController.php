@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
+use Carbon\Carbon;
 use App\Models\Group;
 use App\Models\TourGuide;
 use App\Models\Booking;
 use App\Models\BookingCustomer;
 use App\Models\Attendance;
+use App\Notifications\GuideAssignedNotification;
 
 class GroupController extends Controller
 {
@@ -26,17 +27,48 @@ class GroupController extends Controller
             'guide'
         ]);
 
-        // ================= SEARCH TOUR NAME =================
+        // SEARCH NAME
         if ($request->filled('keyword')) {
             $query->whereHas('trip.tour', function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->keyword . '%');
             });
         }
 
-        // ================= SEARCH DATE =================
+        // SEARCH DATE
         if ($request->filled('start_date')) {
             $query->whereHas('trip', function ($q) use ($request) {
                 $q->whereDate('start_date', $request->start_date);
+            });
+        }
+
+        /*
+        =====================================
+        🔥 FILTER NÂNG CAO
+        =====================================
+        */
+
+        // 1. Thiếu khách
+        if ($request->filter == 'lack') {
+            $query->whereColumn('current_people', '<', 'min_people');
+        }
+
+        // 2. Chưa đủ khách (status pending)
+        if ($request->filter == 'pending') {
+            $query->where('status', Group::STATUS_PENDING);
+        }
+
+        // 3. Đang chuyển nhượng
+        if ($request->filter == 'transfer') {
+            $query->where('transfer_status', 'for_transfer');
+        }
+
+        // 4. Sắp khởi hành (<= 3 ngày)
+        if ($request->filter == 'coming') {
+            $today = Carbon::today();
+
+            $query->whereHas('trip', function ($q) use ($today) {
+                $q->whereDate('start_date', '>=', $today)
+                ->whereDate('start_date', '<=', $today->copy()->addDays(3));
             });
         }
 
@@ -129,6 +161,34 @@ class GroupController extends Controller
             'guide_id' => $guide->id
         ]);
 
-        return back()->with('success', 'Phân công thành công');
+        // 🔥 GỬI NOTIFICATION ĐÚNG USER
+        $user = $guide->user;
+
+        if ($user) {
+            $user->notify(new GuideAssignedNotification($group));
+        }
+
+        return back()->with('success', 'Phân công thành công và đã gửi thông báo');
+    }
+    
+    public function toggleTransfer($id)
+    {
+        $group = Group::findOrFail($id);
+
+        // 🔥 RULE: chỉ cho phép chuyển nhượng khi thiếu khách
+        if ($group->current_people >= $group->min_people) {
+            return back()->with('error', 'Đoàn đã đủ khách, không cần chuyển nhượng');
+        }
+
+        // 🔄 Toggle trạng thái
+        $newStatus = $group->transfer_status == 'for_transfer'
+            ? 'no_transfer'
+            : 'for_transfer';
+
+        $group->update([
+            'transfer_status' => $newStatus
+        ]);
+
+        return back()->with('success', 'Cập nhật trạng thái chuyển nhượng thành công');
     }
 }

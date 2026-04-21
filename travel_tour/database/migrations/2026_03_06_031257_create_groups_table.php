@@ -35,6 +35,10 @@ return new class extends Migration
             ])->default('pending');
             $table->string('note')->nullable();
 
+            $table->enum('transfer_status', [
+                'no_transfer',     // không bán
+                'for_transfer'     // bán / chuyển nhượng
+            ])->default('no_transfer');
         });
     }
 

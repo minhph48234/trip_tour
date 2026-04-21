@@ -11,6 +11,7 @@
     </p>
 </div>
 
+
 {{-- CARD THỐNG KÊ --}}
 <div class="row g-4">
 
@@ -159,7 +160,6 @@
 {{-- CSS --}}
 <style>
 
-/* CARD */
 .stat-card {
     border-radius: 16px;
     transition: 0.3s;
@@ -168,7 +168,6 @@
     transform: translateY(-4px);
 }
 
-/* ICON */
 .icon {
     width: 50px;
     height: 50px;
@@ -180,24 +179,20 @@
     font-size: 20px;
 }
 
-/* TABLE */
 .hover-row:hover {
     background-color: #f8f9fa;
 }
 
-/* BADGE */
 .status-badge {
     padding: 6px 10px;
     font-size: 12px;
     border-radius: 8px;
 }
 
-/* BUTTON */
 .btn {
     border-radius: 8px;
 }
 
-/* TABLE */
 .table {
     border-radius: 12px;
     overflow: hidden;

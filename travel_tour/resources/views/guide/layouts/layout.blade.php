@@ -6,6 +6,7 @@
 <title>Guide Panel</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
 </head>
 
@@ -16,7 +17,7 @@
 <div class="container-fluid">
 
 <a class="navbar-brand" href="{{ route('guide.dashboard') }}">
-Guide Panel
+    Guide Panel
 </a>
 
 <div class="collapse navbar-collapse">
@@ -24,24 +25,61 @@ Guide Panel
 <ul class="navbar-nav me-auto">
 
 <li class="nav-item">
-<a class="nav-link" href="{{ route('guide.dashboard') }}">
-Dashboard
-</a>
+    <a class="nav-link" href="{{ route('guide.dashboard') }}">Dashboard</a>
 </li>
 
 <li class="nav-item">
-<a class="nav-link" href="{{ route('guide.groups') }}">
-Tour của tôi
-</a>
+    <a class="nav-link" href="{{ route('guide.groups') }}">Tour của tôi</a>
 </li>
 
 <li class="nav-item">
-<a class="nav-link" href="{{ route('guide.history') }}">
-Lịch sử tour đã dẫn
-</a>
+    <a class="nav-link" href="{{ route('guide.history') }}">Lịch sử</a>
 </li>
 
 </ul>
+
+{{-- 🔔 NOTIFICATION ICON --}}
+@php
+    $notifications = auth()->user()->notifications ?? collect();
+    $unreadCount = auth()->user()->unreadNotifications->count() ?? 0;
+@endphp
+
+<div class="dropdown me-3">
+
+    <a class="btn btn-dark position-relative" id="bellBtn" data-bs-toggle="dropdown">
+        <i class="bi bi-bell fs-5"></i>
+
+        @if($unreadCount > 0)
+            <span id="notiBadge"
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {{ $unreadCount }}
+            </span>
+        @endif
+    </a>
+
+    <ul class="dropdown-menu dropdown-menu-end p-2" style="width:300px">
+
+        <li class="fw-bold mb-2">Thông báo</li>
+
+        @forelse($notifications->take(5) as $noti)
+            <li class="mb-2 border-bottom pb-2">
+
+                <small class="text-dark">
+                    {{ $noti->data['message'] ?? '' }}
+                </small><br>
+
+                <a href="{{ route('guide.groups', $noti->data['group_id']) }}"
+                   class="btn btn-sm btn-primary mt-1">
+                    Xem
+                </a>
+
+            </li>
+        @empty
+            <li class="text-muted">Không có thông báo</li>
+        @endforelse
+
+    </ul>
+</div>
 
 <form action="{{ route('logout') }}" method="POST">
 @csrf
@@ -67,5 +105,28 @@ Lịch sử tour đã dẫn
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.getElementById('bellBtn').addEventListener('click', function () {
+
+    fetch("{{ route('guide.notifications.read') }}", {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success){
+            let badge = document.getElementById('notiBadge');
+            if(badge){
+                badge.remove(); // 🔥 Ẩn badge luôn
+            }
+        }
+    });
+
+});
+</script>
 </body>
 </html>
