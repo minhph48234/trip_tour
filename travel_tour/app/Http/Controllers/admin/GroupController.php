@@ -191,4 +191,5 @@ class GroupController extends Controller
 
         return back()->with('success', 'Cập nhật trạng thái chuyển nhượng thành công');
     }
+
 }

@@ -38,6 +38,10 @@
                             <th>Ngày về</th>
                             <th>Khách</th>
                             <th>Trạng thái</th>
+
+                            {{-- 🔥 CỘT MỚI --}}
+                            <th>Xác nhận</th>
+
                             <th class="text-end">Hành động</th>
                         </tr>
                     </thead>
@@ -54,16 +58,12 @@
                             {{ $group->trip->tour->name ?? '' }}
                         </td>
 
-                        <td>
-                            <span class="text-muted">
-                                {{ $group->trip->start_date }}
-                            </span>
+                        <td class="text-muted">
+                            {{ $group->trip->start_date }}
                         </td>
 
-                        <td>
-                            <span class="text-muted">
-                                {{ $group->trip->end_date }}
-                            </span>
+                        <td class="text-muted">
+                            {{ $group->trip->end_date }}
                         </td>
 
                         <td>
@@ -98,6 +98,30 @@
 
                         </td>
 
+                        {{-- 🔥 XÁC NHẬN GUIDE --}}
+                        <td>
+
+                            @if($group->guide_confirm == 'pending')
+
+                                <form action="{{ route('guide.groups.confirm',$group->id) }}" method="POST">
+                                    @csrf
+                                    <button class="btn btn-sm btn-success">
+                                        ✔ Đồng ý
+                                    </button>
+                                </form>
+
+                            @elseif($group->guide_confirm == 'accepted')
+
+                                <span class="badge bg-success">Đã đồng ý</span>
+
+                            @elseif($group->guide_confirm == 'rejected')
+
+                                <span class="badge bg-danger">Đã từ chối</span>
+
+                            @endif
+
+                        </td>
+
                         {{-- ACTION --}}
                         <td class="text-end">
 
@@ -123,7 +147,7 @@
                     @empty
 
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
+                        <td colspan="8" class="text-center text-muted py-4">
                             Không có tour nào
                         </td>
                     </tr>
@@ -145,56 +169,37 @@
 {{-- CSS --}}
 <style>
 
-/* CARD */
 .card {
     border-radius: 16px;
     transition: 0.3s;
 }
-.card:hover {
-    transform: translateY(-3px);
-}
+.card:hover { transform: translateY(-3px); }
 
-/* TABLE */
 .table {
     border-radius: 12px;
     overflow: hidden;
 }
 
-/* HOVER */
 .hover-row:hover {
     background-color: #f8f9fa;
 }
 
-/* BADGE */
 .badge {
     padding: 6px 10px;
     font-size: 12px;
     border-radius: 8px;
 }
 
-/* SELECT STATUS */
 .status-select {
     border-radius: 8px;
     font-size: 14px;
     padding: 4px 8px;
     border: 1px solid #dee2e6;
-    transition: 0.2s;
 }
 
-.status-select:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 5px rgba(13,110,253,0.3);
-}
-
-/* BUTTON */
 .btn {
     border-radius: 8px;
     font-size: 13px;
-}
-
-/* HEADER */
-.card-header {
-    font-size: 16px;
 }
 
 </style>

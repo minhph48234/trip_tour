@@ -191,4 +191,20 @@ public function history()
 
     return view('guide.history', compact('groups'));
 }
+
+    public function confirm($id)
+    {
+        $group = Group::findOrFail($id);
+
+        // chỉ cho phép guide của group đó
+        if ($group->guide_id != auth()->user()->guide->id) {
+            return back()->with('error','Không có quyền');
+        }
+
+        $group->update([
+            'guide_confirm' => 'accepted'
+        ]);
+
+        return back()->with('success','Bạn đã chấp nhận tour');
+    }
 }

@@ -24,7 +24,8 @@ class Group extends Model
         'progress',
         'note',
         'guide_id',
-        'transfer_status'
+        'transfer_status',
+        'guide_confirm'
     ];
 
     /*

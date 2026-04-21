@@ -39,6 +39,9 @@ return new class extends Migration
                 'no_transfer',     // không bán
                 'for_transfer'     // bán / chuyển nhượng
             ])->default('no_transfer');
+
+            $table->enum('guide_confirm', ['pending','accepted','rejected'])
+            ->default('pending');
         });
     }
 

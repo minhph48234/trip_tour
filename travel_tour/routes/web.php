@@ -181,6 +181,9 @@ Route::middleware(['auth','role:guide'])
             return response()->json(['success' => true]);
         })->name('notifications.read');
 
+        Route::post('/groups/{id}/confirm', [GuideController::class,'confirm'])
+            ->name('groups.confirm');
+
         Route::get('/groups', [GuideController::class,'groups'])
             ->name('groups');
         Route::post('/groups/{id}/progress', [GuideController::class,'updateProgress'])

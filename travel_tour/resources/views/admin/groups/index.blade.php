@@ -28,7 +28,6 @@
                        class="form-control">
             </div>
 
-            {{-- 🔥 FILTER --}}
             <div class="col-md-3">
                 <select name="filter" class="form-control">
                     <option value="">-- Bộ lọc nâng cao --</option>
@@ -53,7 +52,7 @@
 
             <div class="col-md-4">
                 <button class="btn btn-primary">
-                    <i class="fas fa-search"></i> Tìm kiếm
+                    Tìm kiếm
                 </button>
 
                 <a href="{{ route('admin.groups.index') }}" class="btn btn-secondary">
@@ -78,11 +77,13 @@
                         <th>Chuyển nhượng</th>
                         <th>Tiến trình</th>
                         <th>Hướng dẫn viên</th>
+                        <th>Xác nhận HDV</th>
                         <th>Hành động</th>
                     </tr>
                 </thead>
 
                 <tbody>
+
                 @forelse($groups as $group)
 
                 @php
@@ -91,48 +92,24 @@
 
                 <tr>
 
-                    {{-- ID --}}
                     <td class="text-center">{{ $group->id }}</td>
 
-                    {{-- TOUR --}}
                     <td>
                         <strong>{{ $group->trip->tour->name ?? 'N/A' }}</strong>
                     </td>
 
-                    {{-- NGÀY ĐI --}}
                     <td class="text-center">
                         {{ \Carbon\Carbon::parse($group->trip->start_date)->format('d/m/Y') }}
                     </td>
 
-                    {{-- NGÀY VỀ --}}
                     <td class="text-center">
                         {{ \Carbon\Carbon::parse($group->trip->end_date)->format('d/m/Y') }}
                     </td>
 
-                    {{-- SỐ KHÁCH --}}
                     <td class="text-center">
-
                         <span class="badge bg-info">
                             {{ $group->current_people }}/{{ $group->max_people }}
                         </span>
-
-                        @if($group->current_people < $group->min_people)
-                            <div class="text-danger small">
-                                ⚠ Thiếu {{ $group->min_people - $group->current_people }} khách
-                            </div>
-                        @else
-                            <div class="text-success small">
-                                ✔ Đủ khách
-                            </div>
-                        @endif
-
-                        {{-- 🔥 SẮP KHỞI HÀNH --}}
-                        @if($daysLeft <= 3 && $daysLeft >= 0)
-                            <div class="text-warning small">
-                                🚀 Sắp khởi hành
-                            </div>
-                        @endif
-
                     </td>
 
                     {{-- STATUS --}}
@@ -148,16 +125,12 @@
                         @endif
                     </td>
 
-                    {{-- 🔥 CHUYỂN NHƯỢNG --}}
+                    {{-- CHUYỂN NHƯỢNG --}}
                     <td class="text-center">
                         @if($group->transfer_status == 'for_transfer')
-                            <span class="badge bg-danger">
-                                🔥 Chuyển nhượng
-                            </span>
+                            <span class="badge bg-danger">🔥 Chuyển nhượng</span>
                         @else
-                            <span class="badge bg-success">
-                                Bình thường
-                            </span>
+                            <span class="badge bg-success">Bình thường</span>
                         @endif
                     </td>
 
@@ -172,20 +145,49 @@
                         @endif
                     </td>
 
-                    {{-- GUIDE --}}
+                    {{-- GUIDE (CHỈ HIỂN THỊ NẾU ACCEPTED) --}}
                     <td class="text-center">
-                        @if($group->guide)
-                            {{ $group->guide->name }}
+
+                        @if($group->guide && $group->guide_confirm == 'accepted')
+                            <span class="badge bg-success">
+                                {{ $group->guide->name }}
+                            </span>
+
+                        @elseif($group->guide && $group->guide_confirm == 'pending')
+                            <span class="text-muted">⏳ Chờ xác nhận</span>
+
+                        @elseif($group->guide && $group->guide_confirm == 'rejected')
+                            <span class="text-danger">❌ Từ chối</span>
+
                         @else
                             <span class="text-muted">Chưa phân công</span>
                         @endif
+
+                    </td>
+
+                    {{-- XÁC NHẬN HDV --}}
+                    <td class="text-center">
+
+                        @if($group->guide_confirm == 'pending')
+                            <span class="badge bg-warning text-dark">⏳ Chờ</span>
+
+                        @elseif($group->guide_confirm == 'accepted')
+                            <span class="badge bg-success">Đã đồng ý</span>
+
+                        @elseif($group->guide_confirm == 'rejected')
+                            <span class="badge bg-danger">Từ chối</span>
+
+                        @else
+                            <span class="text-muted">--</span>
+                        @endif
+
                     </td>
 
                     {{-- ACTION --}}
                     <td class="text-center">
                         <a href="{{ route('admin.groups.show',$group->id) }}"
                            class="btn btn-info btn-sm">
-                            <i class="fas fa-eye"></i>
+                            Xem
                         </a>
                     </td>
 
@@ -193,17 +195,17 @@
 
                 @empty
                 <tr>
-                    <td colspan="10" class="text-center text-muted">
+                    <td colspan="11" class="text-center text-muted">
                         Không có dữ liệu
                     </td>
                 </tr>
                 @endforelse
+
                 </tbody>
 
             </table>
         </div>
 
-        {{-- PAGINATION --}}
         <div class="mt-3">
             {{ $groups->appends(request()->query())->links() }}
         </div>
