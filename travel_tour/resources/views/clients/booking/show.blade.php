@@ -6,13 +6,10 @@ use Illuminate\Support\Str;
 /* LẤY TOUR */
 $tour = $booking->trip->tour;
 
-/* ======================
-   ẢNH ĐẠI DIỆN
-====================== */
+/* ================= ẢNH ================= */
 $displayUrl = null;
 
 if ($tour->thumbnail ?? null) {
-
     if (Str::startsWith($tour->thumbnail, ['http://','https://'])) {
         $displayUrl = $tour->thumbnail;
     }
@@ -25,52 +22,7 @@ if (!$displayUrl) {
     $displayUrl = 'https://images.unsplash.com/photo-1503220317375-aaad61436b1b?q=80&w=1200';
 }
 
-/* ======================
-   TRẠNG THÁI BOOKING
-====================== */
-switch ($booking->status) {
-
-    case 'pending':
-        $statusText = 'Chờ thanh toán';
-        $statusColor = 'bg-yellow-100 text-yellow-700';
-        break;
-
-    case 'deposit_paid':
-        $statusText = 'Đã đặt cọc';
-        $statusColor = 'bg-blue-100 text-blue-700';
-        break;
-
-    case 'paid':
-        $statusText = 'Đã thanh toán đủ';
-        $statusColor = 'bg-green-100 text-green-700';
-        break;
-
-    case 'completed':
-        $statusText = 'Hoàn thành';
-        $statusColor = 'bg-green-200 text-green-800';
-        break;
-
-    case 'canceled':
-        $statusText = 'Đã hủy';
-        $statusColor = 'bg-red-100 text-red-700';
-        break;
-
-    default:
-        $statusText = $booking->status;
-        $statusColor = 'bg-gray-100 text-gray-700';
-}
-
-/* ======================
-   🔥 TRẠNG THÁI ADMIN (SỬA CHUẨN)
-====================== */
-$isConfirmed = $booking->payments
-    ->where('admin_confirm_status','confirmed')
-    ->count() > 0;
-
-/* ======================
-   TÍNH TIỀN
-====================== */
-
+/* ================= TIỀN ================= */
 $totalPaid = $booking->payments->where('status','paid')->sum('amount');
 
 $deposit = $booking->payments
@@ -85,6 +37,57 @@ $final = $booking->payments
 
 $remaining = $booking->total_price - $totalPaid;
 
+/* ================= ADMIN STATUS ================= */
+$hasDepositConfirmed = $booking->payments
+    ->where('admin_confirm_status','deposit_confirmed')
+    ->count() > 0;
+
+$hasFinalConfirmed = $booking->payments
+    ->where('admin_confirm_status','confirmed')
+    ->count() > 0;
+
+/* ================= BOOKING STATUS ================= */
+if($hasFinalConfirmed){
+    $statusText = 'Đã xác nhận thanh toán đủ';
+    $statusColor = 'bg-green-100 text-green-700';
+}
+elseif($hasDepositConfirmed){
+    $statusText = 'Đã xác nhận đặt cọc';
+    $statusColor = 'bg-blue-100 text-blue-700';
+}
+else{
+    switch ($booking->status) {
+        case 'pending':
+            $statusText = 'Chờ thanh toán';
+            $statusColor = 'bg-yellow-100 text-yellow-700';
+            break;
+
+        case 'deposit_paid':
+            $statusText = 'Đã đặt cọc (chờ admin)';
+            $statusColor = 'bg-blue-100 text-blue-700';
+            break;
+
+        case 'paid':
+            $statusText = 'Đã thanh toán đủ (chờ admin)';
+            $statusColor = 'bg-green-100 text-green-700';
+            break;
+
+        case 'completed':
+            $statusText = 'Hoàn thành';
+            $statusColor = 'bg-green-200 text-green-800';
+            break;
+
+        case 'canceled':
+            $statusText = 'Đã hủy';
+            $statusColor = 'bg-red-100 text-red-700';
+            break;
+
+        default:
+            $statusText = 'Đang xử lý';
+            $statusColor = 'bg-gray-100 text-gray-700';
+    }
+}
+
 @endphp
 
 @section('title', $tour->name)
@@ -93,27 +96,22 @@ $remaining = $booking->total_price - $totalPaid;
 
 <div class="max-w-6xl mx-auto py-10 px-4">
 
-{{-- ẢNH TOUR --}}
+{{-- ẢNH --}}
 <div class="mb-8">
     <img src="{{ $displayUrl }}"
-         class="w-full h-[420px] object-cover rounded-2xl shadow-lg"
-         alt="{{ $tour->name }}">
+         class="w-full h-[420px] object-cover rounded-2xl shadow-lg">
 </div>
 
-{{-- TÊN TOUR --}}
-<div class="flex flex-col md:flex-row md:justify-between md:items-center mb-8">
+{{-- TÊN --}}
+<div class="flex justify-between mb-8">
+    <h1 class="text-3xl font-bold">{{ $tour->name }}</h1>
 
-    <h1 class="text-3xl font-bold text-slate-800">
-        {{ $tour->name }}
-    </h1>
-
-    <div class="text-3xl font-black text-red-600 mt-4 md:mt-0">
+    <div class="text-3xl font-black text-red-600">
         {{ number_format($tour->price) }} VNĐ
     </div>
-
 </div>
 
-{{-- THÔNG TIN BOOKING --}}
+{{-- BOX --}}
 <div class="bg-white shadow-lg rounded-2xl p-6 mb-10">
 
     <h2 class="text-xl font-bold mb-4">Thông tin đặt tour</h2>
@@ -122,10 +120,6 @@ $remaining = $booking->total_price - $totalPaid;
 
     <p><b>Ngày khởi hành:</b>
         {{ \Carbon\Carbon::parse($booking->trip->start_date)->format('d/m/Y') }}
-    </p>
-
-    <p><b>Ngày kết thúc:</b>
-        {{ \Carbon\Carbon::parse($booking->trip->end_date)->format('d/m/Y') }}
     </p>
 
     <hr class="my-3">
@@ -148,7 +142,7 @@ $remaining = $booking->total_price - $totalPaid;
         </span>
     </p>
 
-    <p><b>số tiền đã thanh toán trong hoá lần thanh toán này:</b>
+    <p><b>Thanh toán full:</b>
         <span class="text-purple-600 font-semibold">
             {{ number_format($final) }} VNĐ
         </span>
@@ -162,41 +156,45 @@ $remaining = $booking->total_price - $totalPaid;
 
     <hr class="my-3">
 
-    {{-- TRẠNG THÁI --}}
-    <p class="mb-2">
-        <b>Trạng thái đơn:</b>
-        <span class="px-3 py-1 rounded-lg font-semibold {{ $statusColor }}">
+    {{-- STATUS --}}
+    <p>
+        <b>Trạng thái:</b>
+        <span class="px-3 py-1 rounded-lg {{ $statusColor }}">
             {{ $statusText }}
         </span>
     </p>
 
-    {{-- 🔥 TRẠNG THÁI ADMIN --}}
-    <p>
+    {{-- ADMIN --}}
+    <p class="mt-2">
         <b>Xác nhận admin:</b>
 
-        @if($isConfirmed)
-            <span class="px-3 py-1 rounded-lg bg-green-100 text-green-700 font-semibold">
-                ✔ Đã xác nhận
+        @if($hasFinalConfirmed)
+            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg">
+                ✔ Đã xác nhận thanh toán đủ
+            </span>
+        @elseif($hasDepositConfirmed)
+            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg">
+                ✔ Đã xác nhận đặt cọc
             </span>
         @else
-            <span class="px-3 py-1 rounded-lg bg-yellow-100 text-yellow-700 font-semibold">
+            <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg">
                 ⏳ Chờ xác nhận
             </span>
         @endif
     </p>
 
-    {{-- NÚT THANH TOÁN --}}
-    @if($booking->status !== 'paid' && $booking->status !== 'completed' && $booking->status !== 'canceled')
+    {{-- BUTTON --}}
+    @if(!$hasFinalConfirmed && !in_array($booking->status,['completed','canceled']))
 
         @if($totalPaid < $booking->deposit_amount)
             <a href="{{ route('payment.vnpay',$booking->id) }}"
-               class="inline-block mt-4 bg-yellow-500 text-white px-5 py-2 rounded-lg hover:bg-yellow-600">
+               class="inline-block mt-4 bg-yellow-500 text-white px-5 py-2 rounded-lg">
                 Thanh toán cọc
             </a>
 
         @elseif($totalPaid < $booking->total_price)
             <a href="{{ route('payment.vnpayFinal',$booking->id) }}"
-               class="inline-block mt-4 bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700">
+               class="inline-block mt-4 bg-green-600 text-white px-5 py-2 rounded-lg">
                 Thanh toán phần còn lại
             </a>
         @endif
@@ -205,10 +203,10 @@ $remaining = $booking->total_price - $totalPaid;
 
 </div>
 
-{{-- LỊCH SỬ THANH TOÁN --}}
+{{-- LỊCH SỬ --}}
 @if($booking->payments->count())
 
-<div class="bg-white shadow-lg rounded-2xl p-6 mb-10">
+<div class="bg-white shadow-lg rounded-2xl p-6">
 
     <h2 class="text-xl font-bold mb-4">Lịch sử thanh toán</h2>
 
@@ -226,21 +224,43 @@ $remaining = $booking->total_price - $totalPaid;
         <tbody>
             @foreach($booking->payments as $pay)
             <tr>
-                <td class="p-3 border">
-                    {{ $pay->type_text ?? $pay->type }}
-                </td>
+                <td class="p-3 border">{{ $pay->type }}</td>
 
                 <td class="p-3 border text-red-600 font-bold">
                     {{ number_format($pay->amount) }} VNĐ
                 </td>
 
+                {{-- ✅ VIỆT HÓA STATUS --}}
                 <td class="p-3 border">
-                    {{ $pay->status_text }}
+                    @switch($pay->status)
+
+                        @case('paid')
+                            <span class="text-green-600 font-semibold">Đã thanh toán</span>
+                            @break
+
+                        @case('pending')
+                            <span class="text-yellow-600 font-semibold">Chờ thanh toán</span>
+                            @break
+
+                        @case('failed')
+                            <span class="text-red-600 font-semibold">Thất bại</span>
+                            @break
+
+                        @case('refunded')
+                            <span class="text-blue-600 font-semibold">Đã hoàn tiền</span>
+                            @break
+
+                        @default
+                            <span class="text-gray-600">{{ $pay->status }}</span>
+                    @endswitch
                 </td>
 
+                {{-- ADMIN --}}
                 <td class="p-3 border">
                     @if($pay->admin_confirm_status == 'confirmed')
-                        <span class="text-green-600 font-semibold">✔ Đã xác nhận</span>
+                        <span class="text-green-600 font-semibold">✔ Thanh toán đủ</span>
+                    @elseif($pay->admin_confirm_status == 'deposit_confirmed')
+                        <span class="text-blue-600 font-semibold">✔ Đã xác nhận cọc</span>
                     @else
                         <span class="text-yellow-600 font-semibold">⏳ Chờ xác nhận</span>
                     @endif
@@ -257,15 +277,5 @@ $remaining = $booking->total_price - $totalPaid;
 </div>
 
 @endif
-
-{{-- BACK --}}
-<div class="text-center mt-10">
-    <a href="{{ route('booking.history') }}"
-       class="bg-slate-800 hover:bg-blue-600 text-white px-8 py-3 rounded-xl font-bold transition">
-        Quay lại lịch sử
-    </a>
-</div>
-
-</div>
 
 @endsection
