@@ -217,7 +217,7 @@ class BookingController extends Controller
 
             DB::rollBack();
 
-            return back()->with('error', $e->getMessage());
+            dd($e->getMessage());
         }
     }
 

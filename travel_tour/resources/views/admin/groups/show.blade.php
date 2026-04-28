@@ -93,19 +93,23 @@
 
                 @foreach($guides as $guide)
 
-                    @php
-                        $isSelected = $group->guide_id == $guide->id;
+                @php
+    // check đã assign guide chưa
+    $isSelected = $group->guideAssignments->contains('guide_id', $guide->id);
 
-                        $isBusy = \App\Models\Group::where('guide_id', $guide->id)
-                            ->where('id', '!=', $group->id)
-                            ->whereHas('trip', function ($q) use ($group) {
-                                $q->where(function ($query) use ($group) {
-                                    $query->where('start_date', '<=', $group->trip->end_date)
-                                          ->where('end_date', '>=', $group->trip->start_date);
-                                });
-                            })
-                            ->exists();
-                    @endphp
+    // check guide có bị trùng lịch không
+    $isBusy = \App\Models\Group::whereHas('guideAssignments', function ($q) use ($guide) {
+            $q->where('guide_id', $guide->id);
+        })
+        ->where('id', '!=', $group->id)
+        ->whereHas('trip', function ($q) use ($group) {
+            $q->where(function ($query) use ($group) {
+                $query->where('start_date', '<=', $group->trip->end_date)
+                      ->where('end_date', '>=', $group->trip->start_date);
+            });
+        })
+        ->exists();
+@endphp
 
                     <option value="{{ $guide->id }}"
                         {{ $isSelected ? 'selected' : '' }}

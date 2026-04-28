@@ -70,6 +70,10 @@ class Group extends Model
         return $this->hasMany(Booking::class);
     }
 
+    public function guideAssignments()
+{
+    return $this->hasMany(\App\Models\GuideAssignment::class, 'group_id');
+}
     /*
     ===============================
     HELPER FUNCTIONS

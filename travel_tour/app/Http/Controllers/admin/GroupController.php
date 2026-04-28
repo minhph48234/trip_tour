@@ -138,15 +138,17 @@ class GroupController extends Controller
         | 2. CHECK TRÙNG LỊCH
         |--------------------------------------------------
         */
-        $isOverlap = Group::where('guide_id', $guide->id)
-            ->where('id', '!=', $group->id)
-            ->whereHas('trip', function ($q) use ($tripStart, $tripEnd) {
-                $q->where(function ($query) use ($tripStart, $tripEnd) {
-                    $query->where('start_date', '<=', $tripEnd)
-                          ->where('end_date', '>=', $tripStart);
-                });
-            })
-            ->exists();
+        $isOverlap = Group::whereHas('guideAssignments', function ($q) use ($guide) {
+            $q->where('guide_id', $guide->id);
+        })
+        ->where('id', '!=', $group->id)
+        ->whereHas('trip', function ($q) use ($tripStart, $tripEnd) {
+            $q->where(function ($query) use ($tripStart, $tripEnd) {
+                $query->where('start_date', '<=', $tripEnd)
+                      ->where('end_date', '>=', $tripStart);
+            });
+        })
+        ->exists();
 
         if ($isOverlap) {
             return back()->with('error', 'Hướng dẫn viên bị trùng lịch / trùng ngày');
@@ -157,9 +159,13 @@ class GroupController extends Controller
         | 3. ASSIGN GUIDE
         |--------------------------------------------------
         */
-        $group->update([
-            'guide_id' => $guide->id
-        ]);
+        \App\Models\GuideAssignment::updateOrCreate(
+            ['group_id' => $group->id],
+            [
+                'guide_id' => $guide->id,
+                'trip_id' => $group->trip_id
+            ]
+        );
 
         // 🔥 GỬI NOTIFICATION ĐÚNG USER
         $user = $guide->user;

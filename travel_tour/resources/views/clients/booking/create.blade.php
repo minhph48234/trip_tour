@@ -47,15 +47,15 @@
 
 <input type="text" name="customer_name" placeholder="Họ tên"
 class="w-full border px-3 py-2 rounded"
-value="{{ old('customer_name', auth()->user()->name ?? '') }}" required>
+value="{{ old('customer_name', auth()->user()->name ?? '') }}" >
 
 <input type="text" name="customer_phone" placeholder="SĐT"
 class="w-full border px-3 py-2 rounded"
-value="{{ old('customer_phone', auth()->user()->phone ?? '') }}" required>
+value="{{ old('customer_phone', auth()->user()->phone ?? '') }}" >
 
 <input type="email" name="customer_email" placeholder="Email"
 class="w-full border px-3 py-2 rounded"
-value="{{ old('customer_email', auth()->user()->email ?? '') }}" required>
+value="{{ old('customer_email', auth()->user()->email ?? '') }}" >
 
 <input type="number" id="total_people" name="total_people"
 min="1"
@@ -138,11 +138,11 @@ list.innerHTML += `
 <td>${i+1}</td>
 
 <td>
-<input name="customers[${i}][name]" required class="border w-full px-2 py-1">
+<input name="customers[${i}][name]"  class="border w-full px-2 py-1">
 </td>
 
 <td>
-<input name="customers[${i}][phone]" required class="border w-full px-2 py-1">
+<input name="customers[${i}][phone]"  class="border w-full px-2 py-1">
 </td>
 
 <td>
@@ -155,7 +155,7 @@ list.innerHTML += `
 <td>
 <input type="date"
 name="customers[${i}][birthdate]"
-class="birth border w-full px-2 py-1" required>
+class="birth border w-full px-2 py-1" >
 </td>
 
 <td>

@@ -24,39 +24,49 @@ class GuideController extends Controller
 
     // tất cả group
     $groups = Group::with(['trip.tour'])
-        ->where('guide_id', $guideId)
-        ->get();
+    ->whereHas('guideAssignments', function ($q) use ($guideId) {
+        $q->where('guide_id', $guideId);
+    })
+    ->get();
 
     // tổng tour
     $totalTours = $groups->count();
 
     // tổng khách
-    $totalCustomers = Booking::whereHas('group', function($q) use ($guideId){
+    $totalCustomers = Booking::whereHas('group.guideAssignments', function ($q) use ($guideId) {
         $q->where('guide_id', $guideId);
     })->sum('quantity');
 
     // tour trong tuần
-    $weeklyTours = Group::where('guide_id', $guideId)
-        ->whereHas('trip', function($q){
-            $q->whereBetween('start_date', [
-                now()->startOfWeek(),
-                now()->endOfWeek()
-            ]);
-        })->count();
+    $weeklyTours = Group::whereHas('guideAssignments', function ($q) use ($guideId) {
+        $q->where('guide_id', $guideId);
+    })
+    ->whereHas('trip', function($q){
+        $q->whereBetween('start_date', [
+            now()->startOfWeek(),
+            now()->endOfWeek()
+        ]);
+    })
+    ->count();
 
     // tour trong tháng
-    $monthlyTours = Group::where('guide_id', $guideId)
-        ->whereHas('trip', function($q){
-            $q->whereMonth('start_date', now()->month)
-              ->whereYear('start_date', now()->year);
-        })->count();
+    $monthlyTours = Group::whereHas('guideAssignments', function ($q) use ($guideId) {
+        $q->where('guide_id', $guideId);
+    })
+    ->whereHas('trip', function($q){
+        $q->whereMonth('start_date', now()->month)
+          ->whereYear('start_date', now()->year);
+    })
+    ->count();
 
     // danh sách tour được phân công
     $assignedTours = Group::with(['trip.tour'])
-        ->where('guide_id', $guideId)
-        ->orderByDesc('id')
-        ->limit(5)
-        ->get();
+    ->whereHas('guideAssignments', function ($q) use ($guideId) {
+        $q->where('guide_id', $guideId);
+    })
+    ->orderByDesc('id')
+    ->limit(5)
+    ->get();
 
     return view('guide.dashboard', compact(
         'totalTours',
@@ -73,15 +83,15 @@ class GuideController extends Controller
     =========================
     */
     public function groups()
-    {
-        $guide_id = auth()->user()->guide->id;
+{
+    $guideId = auth()->user()->guide->id;
 
-        $groups = Group::where('guide_id', $guide_id)
-            ->with(['trip.tour'])
-            ->get();
+    $groups = Group::whereHas('guideAssignments', function ($q) use ($guideId) {
+        $q->where('guide_id', $guideId);
+    })->with(['trip.tour'])->get();
 
-        return view('guide.groups', compact('groups'));
-    }
+    return view('guide.groups', compact('groups'));
+}
 
     /*
     =========================
