@@ -7,6 +7,9 @@ use App\Models\Payment;
 use App\Models\Booking;
 use Illuminate\Http\Request;
 
+use App\Notifications\PaymentConfirmedNotification;
+
+
 class PaymentController extends Controller
 {
     /*
@@ -75,21 +78,17 @@ class PaymentController extends Controller
     */
     public function confirm($id)
     {
-        $payment = Payment::with('booking')->findOrFail($id);
+        $payment = Payment::with('booking.user')->findOrFail($id);
 
-        // ❌ chưa thanh toán thì không cho xác nhận
         if ($payment->status !== 'paid') {
             return back()->with('error', 'Thanh toán chưa hoàn tất!');
         }
 
-        // ❌ đã xác nhận full rồi thì chặn
         if ($payment->admin_confirm_status === 'confirmed') {
             return back()->with('error', 'Thanh toán này đã được xác nhận đủ!');
         }
 
-        // =========================================
-        // 🔥 PHÂN BIỆT CỌC VS THANH TOÁN HẾT
-        // =========================================
+        // xác nhận
         if ($payment->type === 'deposit') {
             $payment->admin_confirm_status = 'deposit_confirmed';
         } else {
@@ -99,9 +98,7 @@ class PaymentController extends Controller
         $payment->confirmed_at = now();
         $payment->save();
 
-        // =========================================
-        // 🔥 UPDATE BOOKING
-        // =========================================
+        // update booking
         $booking = $payment->booking;
 
         $totalPaid = $booking->payments()
@@ -120,6 +117,15 @@ class PaymentController extends Controller
         }
 
         $booking->save();
+
+        /*
+        =====================================
+        🔥 GỬI THÔNG BÁO CHO KHÁCH
+        =====================================
+        */
+        if ($booking->user) {
+            $booking->user->notify(new PaymentConfirmedNotification($payment));
+        }
 
         return back()->with('success', 'Xác nhận thanh toán thành công!');
     }

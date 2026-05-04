@@ -32,7 +32,7 @@
         </nav>
 
         {{-- AUTH --}}
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3">
 
             {{-- CHƯA LOGIN --}}
             @guest
@@ -49,6 +49,75 @@
 
             {{-- ĐÃ LOGIN --}}
             @auth
+
+                {{-- 🔔 NOTIFICATION --}}
+                @php
+                    $notifications = Auth::user()->notifications ?? collect();
+                    $unreadCount = Auth::user()->unreadNotifications->count() ?? 0;
+                @endphp
+
+                <div class="relative">
+
+                    <button id="bellBtn" 
+                        class="relative p-2 rounded-full hover:bg-gray-100 transition">
+
+                        🔔
+
+                        @if($unreadCount > 0)
+                            <span id="notiBadge"
+                                class="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                {{ $unreadCount }}
+                            </span>
+                        @endif
+                    </button>
+
+                    {{-- DROPDOWN --}}
+                    <div id="notiBox"
+                        class="hidden absolute right-0 mt-3 w-80 bg-white border rounded-xl shadow-lg z-50">
+
+                        <div class="p-3 border-b font-semibold text-gray-700">
+                            Thông báo
+                        </div>
+
+                        <div class="max-h-64 overflow-y-auto">
+
+                            @forelse($notifications->take(5) as $noti)
+                                <div class="p-3 border-b text-sm hover:bg-gray-50">
+
+                                    {{-- nội dung --}}
+                                    <div class="text-gray-700">
+                                        {{ $noti->data['message'] ?? '' }}
+                                    </div>
+
+                                    {{-- số tiền --}}
+                                    @if(isset($noti->data['amount']))
+                                        <div class="text-red-500 font-semibold mt-1">
+                                            {{ number_format($noti->data['amount']) }} đ
+                                        </div>
+                                    @endif
+
+                                    {{-- link --}}
+                                    @if(isset($noti->data['booking_id']))
+                                        <a href="{{ route('booking.show', $noti->data['booking_id']) }}"
+                                           class="text-blue-500 text-xs mt-1 inline-block">
+                                           Xem chi tiết
+                                        </a>
+                                    @endif
+
+                                </div>
+                            @empty
+                                <div class="p-3 text-gray-500 text-center">
+                                    Không có thông báo
+                                </div>
+                            @endforelse
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {{-- USER --}}
                 <div class="relative group">
 
                     <button class="flex items-center gap-2 px-3 py-2 rounded-lg 
@@ -96,8 +165,29 @@
                     </div>
 
                 </div>
+
             @endauth
 
         </div>
     </div>
 </header>
+
+{{-- JS --}}
+<script>
+document.getElementById('bellBtn')?.addEventListener('click', function () {
+
+    let box = document.getElementById('notiBox');
+    box.classList.toggle('hidden');
+
+    fetch("{{ route('user.notifications.read') }}", {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        }
+    }).then(() => {
+        let badge = document.getElementById('notiBadge');
+        if (badge) badge.remove();
+    });
+
+});
+</script>

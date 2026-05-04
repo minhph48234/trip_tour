@@ -225,7 +225,11 @@ Route::middleware(['auth','role:user'])
         Route::get('/dashboard', function () {
             return view('clients.home');
         })->name('dashboard');
-
+       
+        Route::post('/notifications/read', function () {
+            auth()->user()->unreadNotifications->markAsRead();
+            return response()->json(['success' => true]);
+        })->name('notifications.read');
 });
 
 /*

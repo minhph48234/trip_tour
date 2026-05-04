@@ -62,20 +62,47 @@
         <li class="fw-bold mb-2">Thông báo</li>
 
         @forelse($notifications->take(5) as $noti)
+
+            @php
+                $group = \App\Models\Group::with('trip.tour')
+                    ->find($noti->data['group_id'] ?? null);
+            @endphp
+
             <li class="mb-2 border-bottom pb-2">
 
-                <small class="text-dark">
-                    {{ $noti->data['message'] ?? '' }}
-                </small><br>
+                {{-- MESSAGE --}}
+                <small class="text-dark d-block">
+                    {{ $noti->data['message'] ?? 'Thông báo mới' }}
+                </small>
 
-                <a href="{{ route('guide.groups', $noti->data['group_id']) }}"
-                   class="btn btn-sm btn-primary mt-1">
-                    Xem
-                </a>
+                {{-- TOUR INFO --}}
+                @if($group && $group->trip)
+
+                    <small class="text-primary d-block">
+                        🧳 {{ $group->trip->tour->name ?? '' }}
+                    </small>
+
+                    <small class="text-muted d-block">
+                        📅 {{ $group->trip->start_date->format('d/m/Y') }}
+                        → {{ $group->trip->end_date->format('d/m/Y') }}
+                    </small>
+
+                @endif
+
+                {{-- BUTTON --}}
+                @if($group)
+                    <a href="{{ route('guide.groups.detail', $group->id) }}"
+                    class="btn btn-sm btn-primary mt-1">
+                        Xem chi tiết
+                    </a>
+                @endif
 
             </li>
+
         @empty
+
             <li class="text-muted">Không có thông báo</li>
+
         @endforelse
 
     </ul>
