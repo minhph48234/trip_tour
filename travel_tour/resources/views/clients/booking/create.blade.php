@@ -27,7 +27,6 @@
 
 <h2 class="text-2xl font-bold mb-6">Thông tin đặt tour</h2>
 
-{{-- ERROR --}}
 @if ($errors->any())
 <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
     @foreach ($errors->all() as $error)
@@ -36,28 +35,28 @@
 </div>
 @endif
 
-<form action="{{ route('booking.store') }}" method="POST">
+<form id="bookingForm" action="{{ route('booking.store') }}" method="POST">
 @csrf
 
 <input type="hidden" name="trip_id" value="{{ $trip->id }}">
 <input type="hidden" name="total_price" id="total_price">
 
-{{-- THÔNG TIN NGƯỜI ĐẶT --}}
+{{-- NGƯỜI ĐẶT --}}
 <div class="space-y-4">
 
 <input type="text" name="customer_name" placeholder="Họ tên"
 class="w-full border px-3 py-2 rounded"
-value="{{ old('customer_name', auth()->user()->name ?? '') }}" >
+value="{{ old('customer_name', auth()->user()->name ?? '') }}">
 
 <input type="text" name="customer_phone" placeholder="SĐT"
 class="w-full border px-3 py-2 rounded"
-value="{{ old('customer_phone', auth()->user()->phone ?? '') }}" >
+value="{{ old('customer_phone', auth()->user()->phone ?? '') }}">
 
 <input type="email" name="customer_email" placeholder="Email"
 class="w-full border px-3 py-2 rounded"
-value="{{ old('customer_email', auth()->user()->email ?? '') }}" >
+value="{{ old('customer_email', auth()->user()->email ?? '') }}">
 
-<input type="number" id="total_people" name="total_people"
+<input type="number" id="total_people"
 min="1"
 value="1"
 class="w-full border px-3 py-2 rounded">
@@ -97,7 +96,9 @@ Tiền cọc: <span id="deposit">0</span> VNĐ
 </p>
 </div>
 
-<button class="mt-4 bg-blue-600 text-white px-6 py-3 rounded">
+{{-- BUTTON --}}
+<button type="button" id="openModal"
+class="mt-4 bg-blue-600 text-white px-6 py-3 rounded">
 Thanh toán tiền cọc
 </button>
 
@@ -107,7 +108,87 @@ Thanh toán tiền cọc
 </div>
 </div>
 
+{{-- ================= MODAL ================= --}}
+<div id="confirmModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+
+<div class="bg-white rounded-xl p-6 max-w-lg w-full">
+
+<h3 class="text-xl font-bold mb-4">Xác nhận trước khi thanh toán</h3>
+
+<div class="text-sm text-gray-600 mb-4 space-y-2 max-h-40 overflow-y-auto">
+
+<p>• Vui lòng kiểm tra thông tin khách hàng chính xác.</p>
+<p>• Tiền cọc không hoàn lại nếu hủy tour.</p>
+<p>• Bạn phải có mặt đúng giờ khởi hành.</p>
+<p>• Công ty không chịu trách nhiệm nếu cung cấp sai thông tin.</p>
+
+</div>
+
+<label class="flex items-center gap-2 mb-4">
+<input type="checkbox" id="agreeCheckbox">
+<span>Tôi đã đọc và đồng ý với các điều khoản</span>
+</label>
+
+<div class="flex justify-end gap-2">
+
+<button id="closeModal"
+class="px-4 py-2 bg-gray-300 rounded">
+Hủy
+</button>
+
+<button id="confirmSubmit"
+class="px-4 py-2 bg-blue-600 text-white rounded opacity-50 cursor-not-allowed"
+disabled>
+Đồng ý & Thanh toán
+</button>
+
+</div>
+
+</div>
+</div>
+
+{{-- ================= SCRIPT ================= --}}
 <script>
+
+// ===== MODAL =====
+const modal = document.getElementById('confirmModal');
+
+document.getElementById('openModal').onclick = function(){
+
+    // validate basic
+    let names = document.querySelectorAll('input[name*="[name]"]');
+
+    if(names.length === 0){
+        alert('Vui lòng nhập thông tin khách hàng!');
+        return;
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+};
+
+document.getElementById('closeModal').onclick = function(){
+    modal.classList.add('hidden');
+};
+
+document.getElementById('agreeCheckbox').addEventListener('change', function(){
+    let btn = document.getElementById('confirmSubmit');
+
+    if(this.checked){
+        btn.disabled = false;
+        btn.classList.remove('opacity-50','cursor-not-allowed');
+    }else{
+        btn.disabled = true;
+        btn.classList.add('opacity-50','cursor-not-allowed');
+    }
+});
+
+document.getElementById('confirmSubmit').onclick = function(){
+    document.getElementById('bookingForm').submit();
+};
+
+
+// ===== BOOKING LOGIC =====
 document.addEventListener("DOMContentLoaded", function(){
 
 const price = {{ $trip->tour->price }};
@@ -137,13 +218,9 @@ list.innerHTML += `
 <tr>
 <td>${i+1}</td>
 
-<td>
-<input name="customers[${i}][name]"  class="border w-full px-2 py-1">
-</td>
+<td><input name="customers[${i}][name]" class="border w-full px-2 py-1"></td>
 
-<td>
-<input name="customers[${i}][phone]"  class="border w-full px-2 py-1">
-</td>
+<td><input name="customers[${i}][phone]" class="border w-full px-2 py-1"></td>
 
 <td>
 <select name="customers[${i}][gender]" class="border w-full px-2 py-1">
@@ -153,9 +230,8 @@ list.innerHTML += `
 </td>
 
 <td>
-<input type="date"
-name="customers[${i}][birthdate]"
-class="birth border w-full px-2 py-1" >
+<input type="date" name="customers[${i}][birthdate]"
+class="birth border w-full px-2 py-1">
 </td>
 
 <td>
@@ -219,6 +295,7 @@ input.addEventListener('input', render);
 render();
 
 });
+
 </script>
 
 @endsection
